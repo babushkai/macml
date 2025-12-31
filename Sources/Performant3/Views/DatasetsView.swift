@@ -5,12 +5,20 @@ struct DatasetsView: View {
     @EnvironmentObject var appState: AppState
     @State private var searchText = ""
     @State private var selectedType: DatasetType?
+    @State private var selectedStatus: DatasetStatus?
     @State private var showingDeleteConfirmation = false
     @State private var datasetToDelete: Dataset?
     @State private var isDraggingOver = false
+    @State private var showCreateWizard = false
+    @State private var showArchiveFilter = false
 
     var filteredDatasets: [Dataset] {
         var datasets = appState.datasets
+
+        // Hide archived/deprecated by default unless filter is on
+        if !showArchiveFilter {
+            datasets = datasets.filter { $0.status.isActive }
+        }
 
         if !searchText.isEmpty {
             datasets = datasets.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
@@ -20,7 +28,19 @@ struct DatasetsView: View {
             datasets = datasets.filter { $0.type == type }
         }
 
+        if let status = selectedStatus {
+            datasets = datasets.filter { $0.status == status }
+        }
+
         return datasets
+    }
+
+    var archivedCount: Int {
+        appState.datasets.filter { !$0.status.isActive }.count
+    }
+
+    var activeCount: Int {
+        appState.datasets.filter { $0.status.isActive }.count
     }
 
     private func handleDrop(providers: [NSItemProvider]) {
@@ -65,16 +85,41 @@ struct DatasetsView: View {
                     Text("Datasets")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                    Text("\(appState.datasets.count) datasets")
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 16) {
+                        Label("\(activeCount) active", systemImage: "folder")
+                        if archivedCount > 0 {
+                            Label("\(archivedCount) archived", systemImage: "archivebox")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundColor(.secondary)
                 }
 
                 Spacer()
 
-                Button(action: { appState.showImportDatasetSheet = true }) {
-                    Label("Import Dataset", systemImage: "folder.badge.plus")
+                HStack(spacing: 8) {
+                    Menu {
+                        Toggle(isOn: $showArchiveFilter) {
+                            Label("Show Archived (\(archivedCount))", systemImage: "archivebox")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.title2)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .frame(width: 30)
+
+                    Button(action: { showCreateWizard = true }) {
+                        Label("Create Dataset", systemImage: "plus")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button(action: { appState.showImportDatasetSheet = true }) {
+                        Label("Import Dataset", systemImage: "folder.badge.plus")
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
-                .buttonStyle(.borderedProminent)
             }
             .padding()
 
@@ -85,6 +130,13 @@ struct DatasetsView: View {
                         .foregroundColor(.secondary)
                     TextField("Search datasets...", text: $searchText)
                         .textFieldStyle(.plain)
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
                 .padding(8)
                 .background(Color(NSColor.controlBackgroundColor))
@@ -93,10 +145,18 @@ struct DatasetsView: View {
                 Picker("Type", selection: $selectedType) {
                     Text("All Types").tag(nil as DatasetType?)
                     ForEach(DatasetType.allCases, id: \.self) { type in
-                        Text(type.rawValue).tag(type as DatasetType?)
+                        Label(type.rawValue, systemImage: type.icon).tag(type as DatasetType?)
                     }
                 }
                 .frame(width: 140)
+
+                Picker("Status", selection: $selectedStatus) {
+                    Text("All Status").tag(nil as DatasetStatus?)
+                    ForEach(DatasetStatus.allCases, id: \.self) { status in
+                        Text(status.rawValue).tag(status as DatasetStatus?)
+                    }
+                }
+                .frame(width: 120)
             }
             .padding(.horizontal)
             .padding(.bottom, 12)
@@ -151,6 +211,10 @@ struct DatasetsView: View {
         } message: {
             Text("Are you sure you want to delete '\(datasetToDelete?.name ?? "")'? This will remove the dataset files.")
         }
+        .sheet(isPresented: $showCreateWizard) {
+            DatasetCreationWizard()
+                .environmentObject(appState)
+        }
     }
 }
 
@@ -175,9 +239,12 @@ struct DatasetCard: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(dataset.name)
-                        .font(.headline)
-                        .lineLimit(1)
+                    HStack(spacing: 8) {
+                        Text(dataset.name)
+                            .font(.headline)
+                            .lineLimit(1)
+                        StatusBadge(text: dataset.status.rawValue, color: dataset.status.color)
+                    }
                     Text(dataset.type.rawValue)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -189,7 +256,48 @@ struct DatasetCard: View {
                     Button(action: { openInFinder() }) {
                         Label("Show in Finder", systemImage: "folder")
                     }
+
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(dataset.id, forType: .string)
+                    } label: {
+                        Label("Copy Dataset ID", systemImage: "doc.on.doc")
+                    }
+
                     Divider()
+
+                    // Archive/Restore actions
+                    if dataset.status == .archived {
+                        Button {
+                            Task { await appState.updateDatasetStatus(dataset.id, status: .active) }
+                        } label: {
+                            Label("Restore", systemImage: "arrow.uturn.backward")
+                        }
+                    } else if dataset.status != .deprecated {
+                        Button {
+                            Task { await appState.updateDatasetStatus(dataset.id, status: .archived) }
+                        } label: {
+                            Label("Archive", systemImage: "archivebox")
+                        }
+                    }
+
+                    // Deprecate/Undeprecate actions
+                    if dataset.status == .deprecated {
+                        Button {
+                            Task { await appState.updateDatasetStatus(dataset.id, status: .active) }
+                        } label: {
+                            Label("Undeprecate", systemImage: "arrow.uturn.backward")
+                        }
+                    } else if dataset.status != .archived {
+                        Button {
+                            Task { await appState.updateDatasetStatus(dataset.id, status: .deprecated) }
+                        } label: {
+                            Label("Mark Deprecated", systemImage: "exclamationmark.triangle")
+                        }
+                    }
+
+                    Divider()
+
                     Button(role: .destructive, action: onDelete) {
                         Label("Delete", systemImage: "trash")
                     }
@@ -199,12 +307,23 @@ struct DatasetCard: View {
                 .buttonStyle(.borderless)
             }
 
+            // Description (if available)
+            if !dataset.description.isEmpty {
+                Text(dataset.description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+
             Divider()
 
             // Stats
             HStack(spacing: 16) {
                 DatasetStat(icon: "doc.on.doc", value: "\(dataset.sampleCount)", label: "Samples")
                 DatasetStat(icon: "internaldrive", value: formatBytes(dataset.size), label: "Size")
+                if !dataset.classes.isEmpty {
+                    DatasetStat(icon: "tag", value: "\(dataset.classes.count)", label: "Classes")
+                }
             }
 
             // Classes (if available)
@@ -235,10 +354,15 @@ struct DatasetCard: View {
 
             // Footer
             HStack {
-                Text("Imported \(dataset.createdAt.formatted(date: .abbreviated, time: .omitted))")
+                Text("Created \(dataset.createdAt.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 Spacer()
+                if dataset.updatedAt != dataset.createdAt {
+                    Text("Updated \(dataset.updatedAt.formatted(date: .abbreviated, time: .omitted))")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
         }
         .padding()
@@ -248,6 +372,7 @@ struct DatasetCard: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(isHovered ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 2)
         )
+        .opacity(dataset.status.isActive ? 1.0 : 0.7)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) {
                 isHovered = hovering

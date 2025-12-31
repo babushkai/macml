@@ -13,9 +13,16 @@ struct ModelsView: View {
     @State private var isDragging = false
     @State private var selectedModels: Set<String> = []
     @State private var isSelectionMode = false
+    @State private var showCreateWizard = false
+    @State private var showArchiveFilter = false
 
     var filteredModels: [MLModel] {
         var models = appState.models
+
+        // Hide archived/deprecated by default unless filter is on
+        if !showArchiveFilter {
+            models = models.filter { $0.status.isActive }
+        }
 
         if !searchText.isEmpty {
             models = models.filter {
@@ -33,6 +40,10 @@ struct ModelsView: View {
         }
 
         return models
+    }
+
+    var archivedCount: Int {
+        appState.models.filter { !$0.status.isActive }.count
     }
 
     var readyModelsCount: Int {
@@ -94,6 +105,12 @@ struct ModelsView: View {
 
                                 Divider()
 
+                                Toggle(isOn: $showArchiveFilter) {
+                                    Label("Show Archived (\(archivedCount))", systemImage: "archivebox")
+                                }
+
+                                Divider()
+
                                 Button(role: .destructive) {
                                     // Delete all filtered models
                                     for model in filteredModels {
@@ -110,6 +127,11 @@ struct ModelsView: View {
                             .menuStyle(.borderlessButton)
                             .frame(width: 30)
                         }
+
+                        Button(action: { showCreateWizard = true }) {
+                            Label("Create Model", systemImage: "plus")
+                        }
+                        .buttonStyle(.bordered)
 
                         Button(action: { appState.showNewModelSheet = true }) {
                             Label("Import Model", systemImage: "square.and.arrow.down")
@@ -243,6 +265,10 @@ struct ModelsView: View {
         } message: {
             Text("Are you sure you want to delete \(selectedModels.count) models? Associated training runs will also be deleted. This cannot be undone.")
         }
+        .sheet(isPresented: $showCreateWizard) {
+            ModelCreationWizard()
+                .environmentObject(appState)
+        }
     }
 
     @ViewBuilder
@@ -268,6 +294,38 @@ struct ModelsView: View {
             NSPasteboard.general.setString(model.id, forType: .string)
         } label: {
             Label("Copy Model ID", systemImage: "doc.on.doc")
+        }
+
+        Divider()
+
+        // Archive/Restore actions
+        if model.status == .archived {
+            Button {
+                Task { await appState.updateModelStatus(model.id, status: .draft) }
+            } label: {
+                Label("Restore", systemImage: "arrow.uturn.backward")
+            }
+        } else if model.status != .deprecated {
+            Button {
+                Task { await appState.updateModelStatus(model.id, status: .archived) }
+            } label: {
+                Label("Archive", systemImage: "archivebox")
+            }
+        }
+
+        // Deprecate/Undeprecate actions
+        if model.status == .deprecated {
+            Button {
+                Task { await appState.updateModelStatus(model.id, status: .draft) }
+            } label: {
+                Label("Undeprecate", systemImage: "arrow.uturn.backward")
+            }
+        } else if model.status != .archived {
+            Button {
+                Task { await appState.updateModelStatus(model.id, status: .deprecated) }
+            } label: {
+                Label("Mark Deprecated", systemImage: "exclamationmark.triangle")
+            }
         }
 
         Divider()

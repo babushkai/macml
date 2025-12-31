@@ -270,25 +270,23 @@ class AppState: ObservableObject {
         }
     }
 
-    /// Add built-in datasets and models if they don't exist
+    /// Add seed datasets and models if they don't exist (first load)
     private func ensureBuiltInDatasets() {
-        // Built-in MNIST dataset
-        let mnistDataset = Dataset(
-            id: "builtin-mnist",
-            name: "MNIST (Built-in)",
-            type: .images,
-            path: "builtin:mnist",
-            sampleCount: 60000,
-            size: 50_000_000,
-            classes: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
-            metadata: ["builtin": "true", "description": "Handwritten digit classification"]
-        )
-
-        if !datasets.contains(where: { $0.id == "builtin-mnist" }) {
-            datasets.insert(mnistDataset, at: 0)
+        // Add seed datasets
+        for seedDataset in DemoDataProvider.seedDatasets {
+            if !datasets.contains(where: { $0.id == seedDataset.id }) {
+                datasets.append(seedDataset)
+            }
         }
 
-        // Default MLX model for training
+        // Add seed models
+        for seedModel in DemoDataProvider.seedModels {
+            if !models.contains(where: { $0.id == seedModel.id }) {
+                models.append(seedModel)
+            }
+        }
+
+        // Ensure default MNIST classifier is present for quick start
         let defaultModel = MLModel(
             id: "default-mlx-model",
             name: "MNIST Classifier",
@@ -297,7 +295,7 @@ class AppState: ObservableObject {
             accuracy: 0,
             fileSize: 0,
             filePath: nil,
-            metadata: ["description": "Default model for MNIST digit classification"]
+            metadata: ["description": "Default model for MNIST digit classification", "architecture": "MLP"]
         )
 
         if !models.contains(where: { $0.id == "default-mlx-model" }) {
@@ -318,6 +316,12 @@ class AppState: ObservableObject {
     }
 
     // MARK: - Model Operations
+
+    func addModel(_ model: MLModel) async {
+        models.insert(model, at: 0)
+        await saveData()
+        showSuccess("Model created: \(model.name)")
+    }
 
     func createModel(name: String, framework: MLFramework) async {
         let model = MLModel(name: name, framework: framework, status: .draft)
@@ -572,6 +576,20 @@ class AppState: ObservableObject {
     }
 
     // MARK: - Dataset Operations
+
+    func addDataset(_ dataset: Dataset) async {
+        datasets.insert(dataset, at: 0)
+        await saveData()
+        showSuccess("Dataset created: \(dataset.name)")
+    }
+
+    func updateDatasetStatus(_ datasetId: String, status: DatasetStatus) async {
+        if let index = datasets.firstIndex(where: { $0.id == datasetId }) {
+            datasets[index].status = status
+            datasets[index].updatedAt = Date()
+            await saveData()
+        }
+    }
 
     func importDataset(from url: URL, name: String, type: DatasetType) async throws {
         isLoading = true

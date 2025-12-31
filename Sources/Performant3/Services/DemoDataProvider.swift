@@ -121,17 +121,21 @@ struct DemoDataProvider {
             Dataset(
                 id: "builtin-mnist",
                 name: "MNIST (Built-in)",
+                description: "Classic handwritten digit recognition dataset with 60,000 training images and 10,000 test images of 28x28 grayscale digits.",
                 type: .images,
+                status: .active,
                 path: "builtin:mnist",  // Special path to indicate built-in dataset
                 sampleCount: 60000,
                 size: 50_000_000,
                 classes: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
-                metadata: ["builtin": "true", "description": "Handwritten digit classification"]
+                metadata: ["builtin": "true"]
             ),
             Dataset(
                 id: "demo-dataset-1",
                 name: "COCO 2017",
+                description: "Large-scale object detection, segmentation, and captioning dataset with 80 object categories.",
                 type: .images,
+                status: .active,
                 path: nil,
                 sampleCount: 118287,
                 size: 19_000_000_000,
@@ -140,7 +144,9 @@ struct DemoDataProvider {
             Dataset(
                 id: "demo-dataset-2",
                 name: "IMDB Reviews",
+                description: "Binary sentiment classification dataset of 50,000 movie reviews for natural language processing.",
                 type: .text,
+                status: .active,
                 path: nil,
                 sampleCount: 50000,
                 size: 84_000_000,
@@ -149,7 +155,9 @@ struct DemoDataProvider {
             Dataset(
                 id: "demo-dataset-3",
                 name: "ImageNet-1K Subset",
+                description: "Subset of ImageNet with 100,000 images across 1000 classes for image classification benchmarking.",
                 type: .images,
+                status: .active,
                 path: nil,
                 sampleCount: 100000,
                 size: 14_000_000_000,
@@ -158,11 +166,88 @@ struct DemoDataProvider {
             Dataset(
                 id: "demo-dataset-4",
                 name: "LibriSpeech",
+                description: "Large corpus of read English speech for training and evaluating speech recognition systems.",
                 type: .audio,
+                status: .active,
                 path: nil,
                 sampleCount: 28539,
                 size: 6_300_000_000,
                 classes: []
+            )
+        ]
+    }
+
+    // MARK: - Seed Data (Auto-loaded on first run)
+
+    static var seedModels: [MLModel] {
+        [
+            MLModel(
+                id: "seed-model-mlp",
+                name: "MLP Classifier",
+                framework: .mlx,
+                status: .draft,
+                accuracy: 0,
+                fileSize: 0,
+                metadata: ["description": "Simple Multi-Layer Perceptron for classification tasks", "architecture": "MLP"]
+            ),
+            MLModel(
+                id: "seed-model-cnn",
+                name: "CNN Image Classifier",
+                framework: .mlx,
+                status: .draft,
+                accuracy: 0,
+                fileSize: 0,
+                metadata: ["description": "Convolutional Neural Network for image classification", "architecture": "CNN"]
+            ),
+            MLModel(
+                id: "seed-model-resnet",
+                name: "ResNet-18",
+                framework: .coreML,
+                status: .draft,
+                accuracy: 0,
+                fileSize: 0,
+                metadata: ["description": "Residual Network with 18 layers for deep learning", "architecture": "ResNet"]
+            )
+        ]
+    }
+
+    static var seedDatasets: [Dataset] {
+        [
+            Dataset(
+                id: "builtin-mnist",
+                name: "MNIST (Built-in)",
+                description: "Classic handwritten digit recognition dataset with 60,000 training images of 28x28 grayscale digits.",
+                type: .images,
+                status: .active,
+                path: "builtin:mnist",
+                sampleCount: 60000,
+                size: 50_000_000,
+                classes: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+                metadata: ["builtin": "true"]
+            ),
+            Dataset(
+                id: "seed-dataset-fashion",
+                name: "Fashion-MNIST",
+                description: "Drop-in replacement for MNIST with 70,000 grayscale images of fashion items in 10 categories.",
+                type: .images,
+                status: .active,
+                path: nil,
+                sampleCount: 70000,
+                size: 30_000_000,
+                classes: ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot"],
+                metadata: ["source": "zalando"]
+            ),
+            Dataset(
+                id: "seed-dataset-cifar",
+                name: "CIFAR-10",
+                description: "Collection of 60,000 32x32 color images in 10 classes, with 6,000 images per class.",
+                type: .images,
+                status: .active,
+                path: nil,
+                sampleCount: 60000,
+                size: 170_000_000,
+                classes: ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"],
+                metadata: ["source": "toronto"]
             )
         ]
     }
