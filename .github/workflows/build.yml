@@ -140,7 +140,7 @@ jobs:
           echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.APP_NAME }}-${{ steps.package.outputs.version }}
           path: ${{ steps.zip.outputs.zip_name }}
