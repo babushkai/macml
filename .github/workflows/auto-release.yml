@@ -249,6 +249,11 @@ jobs:
             cp -R Resources/Scripts/* "$APP_DIR/Contents/Resources/Scripts/"
           fi
 
+          # Copy app icon
+          if [ -f "Resources/AppIcon.icns" ]; then
+            cp "Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/"
+          fi
+
           for framework in "$DERIVED_DATA/PackageFrameworks"/*.framework; do
             [ -d "$framework" ] && cp -R "$framework" "$APP_DIR/Contents/Frameworks/"
           done

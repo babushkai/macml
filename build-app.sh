@@ -66,6 +66,12 @@ if [ -d "Resources/Scripts" ]; then
     echo "Copied Python training scripts"
 fi
 
+# Copy app icon
+if [ -f "Resources/AppIcon.icns" ]; then
+    cp "Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/"
+    echo "Copied app icon"
+fi
+
 # Copy frameworks if any
 for framework in "$DERIVED_DATA/PackageFrameworks"/*.framework; do
     if [ -d "$framework" ]; then
