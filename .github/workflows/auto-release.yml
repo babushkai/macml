@@ -5,6 +5,10 @@ on:
     types: [closed]
     branches: [main, master]
 
+permissions:
+  contents: write
+  pull-requests: read
+
 env:
   APP_NAME: Performant3
   BUNDLE_ID: com.performant3.app
