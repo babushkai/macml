@@ -2,6 +2,7 @@ import Foundation
 import MLX
 import MLXRandom
 import AppKit
+import Compression
 
 // MARK: - MLX Dataset Protocol
 
@@ -229,10 +230,17 @@ final class SyntheticDataset: MLXDataset, @unchecked Sendable {
 // MARK: - MNIST Dataset (built-in)
 
 /// MNIST dataset loader
-/// Downloads and caches MNIST data locally
+/// Downloads and caches real MNIST data locally
 final class MNISTDataset: MLXDataset, @unchecked Sendable {
     static let imageSize = 28
     static let channels = 1
+
+    // MNIST file URLs (using reliable mirror)
+    private static let baseURL = "https://storage.googleapis.com/cvdf-datasets/mnist/"
+    private static let trainImagesFile = "train-images-idx3-ubyte.gz"
+    private static let trainLabelsFile = "train-labels-idx1-ubyte.gz"
+    private static let testImagesFile = "t10k-images-idx3-ubyte.gz"
+    private static let testLabelsFile = "t10k-labels-idx1-ubyte.gz"
 
     let isTrain: Bool
     let classLabels = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
@@ -240,62 +248,252 @@ final class MNISTDataset: MLXDataset, @unchecked Sendable {
     var inputShape: [Int] { [Self.imageSize, Self.imageSize, Self.channels] }
 
     private var images: MLXArray
-    private var labels: MLXArray
+    private var labelsArray: MLXArray
     var count: Int { Int(images.dim(0)) }
 
     init(train: Bool = true) throws {
         self.isTrain = train
 
-        // For now, create synthetic MNIST-like data
-        // In production, this would download actual MNIST
-        let sampleCount = train ? 60000 : 10000
+        // Get cache directory
+        let cacheDir = try MNISTDataset.getCacheDirectory()
 
-        // Create synthetic data that resembles MNIST
-        // Each "digit" is a different pattern
-        var allImages: [[Float]] = []
-        var allLabels: [Int32] = []
+        // Download files if needed
+        let imagesFile = train ? Self.trainImagesFile : Self.testImagesFile
+        let labelsFile = train ? Self.trainLabelsFile : Self.testLabelsFile
 
-        for i in 0..<sampleCount {
-            let label = Int32(i % 10)
-            allLabels.append(label)
+        let imagesPath = cacheDir.appendingPathComponent(imagesFile)
+        let labelsPath = cacheDir.appendingPathComponent(labelsFile)
 
-            // Create a simple pattern based on the label
-            var image = [Float](repeating: 0, count: Self.imageSize * Self.imageSize)
-
-            // Add some structure based on label
-            let baseIntensity = Float(label + 1) / 11.0
-            for y in 0..<Self.imageSize {
-                for x in 0..<Self.imageSize {
-                    let idx = y * Self.imageSize + x
-                    // Create different patterns for different digits
-                    let distFromCenter = sqrt(pow(Float(x - 14), 2) + pow(Float(y - 14), 2))
-                    let pattern: Float
-                    switch label {
-                    case 0: // Circle
-                        pattern = abs(distFromCenter - 8) < 3 ? 1.0 : 0.0
-                    case 1: // Vertical line
-                        pattern = abs(x - 14) < 2 ? 1.0 : 0.0
-                    case 2: // Horizontal top and bottom with diagonal
-                        pattern = (y < 5 || y > 23 || abs(x - y) < 2) ? baseIntensity : 0.0
-                    default:
-                        // Random pattern with some structure
-                        pattern = Float.random(in: 0...1) * baseIntensity
-                    }
-                    image[idx] = pattern + Float.random(in: 0...0.1)
-                }
-            }
-            allImages.append(image)
+        // Download if not cached
+        if !FileManager.default.fileExists(atPath: imagesPath.path) {
+            try MNISTDataset.downloadFile(
+                from: URL(string: Self.baseURL + imagesFile)!,
+                to: imagesPath
+            )
         }
 
-        self.images = MLXArray(allImages.flatMap { $0 })
+        if !FileManager.default.fileExists(atPath: labelsPath.path) {
+            try MNISTDataset.downloadFile(
+                from: URL(string: Self.baseURL + labelsFile)!,
+                to: labelsPath
+            )
+        }
+
+        // Load and parse the data
+        let imageData = try MNISTDataset.loadImages(from: imagesPath)
+        let labelData = try MNISTDataset.loadLabels(from: labelsPath)
+
+        let sampleCount = imageData.count
+        guard sampleCount == labelData.count else {
+            throw TrainingError.invalidDataset("MNIST image/label count mismatch: \(sampleCount) vs \(labelData.count)")
+        }
+
+        // Convert to MLXArray
+        // Images: normalize to [0, 1] and reshape to [N, 28, 28, 1]
+        let flatImages = imageData.flatMap { $0 }
+        self.images = MLXArray(flatImages)
             .reshaped([sampleCount, Self.imageSize, Self.imageSize, Self.channels])
-        self.labels = MLXArray(allLabels)
+
+        self.labelsArray = MLXArray(labelData.map { Int32($0) })
     }
+
+    // MARK: - File Operations
+
+    private static func getCacheDirectory() throws -> URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let cacheDir = appSupport.appendingPathComponent("Performant3/MNIST", isDirectory: true)
+
+        if !FileManager.default.fileExists(atPath: cacheDir.path) {
+            try FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+        }
+
+        return cacheDir
+    }
+
+    private static func downloadFile(from url: URL, to destination: URL) throws {
+        print("[MNIST] Downloading \(url.lastPathComponent)...")
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var downloadError: Error?
+        var downloadedData: Data?
+
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                downloadError = error
+            } else if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                downloadError = TrainingError.datasetLoadFailed("HTTP \(httpResponse.statusCode) downloading \(url.lastPathComponent)")
+            } else {
+                downloadedData = data
+            }
+            semaphore.signal()
+        }
+        task.resume()
+
+        let timeout = semaphore.wait(timeout: .now() + 120) // 2 minute timeout
+        if timeout == .timedOut {
+            task.cancel()
+            throw TrainingError.datasetLoadFailed("Download timed out for \(url.lastPathComponent)")
+        }
+
+        if let error = downloadError {
+            throw error
+        }
+
+        guard let data = downloadedData else {
+            throw TrainingError.datasetLoadFailed("No data received for \(url.lastPathComponent)")
+        }
+
+        try data.write(to: destination)
+        print("[MNIST] Downloaded \(url.lastPathComponent) (\(data.count) bytes)")
+    }
+
+    private static func loadImages(from path: URL) throws -> [[Float]] {
+        // Load and decompress gzip data
+        let compressedData = try Data(contentsOf: path)
+        let data = try decompressGzip(compressedData)
+
+        // Parse IDX file format
+        // Magic number: 0x00000803 (2051) for images
+        guard data.count > 16 else {
+            throw TrainingError.invalidDataset("MNIST images file too small")
+        }
+
+        let magic = data.withUnsafeBytes { ptr -> UInt32 in
+            ptr.load(fromByteOffset: 0, as: UInt32.self).bigEndian
+        }
+
+        guard magic == 2051 else {
+            throw TrainingError.invalidDataset("Invalid MNIST images magic number: \(magic)")
+        }
+
+        let numImages = data.withUnsafeBytes { ptr -> Int in
+            Int(ptr.load(fromByteOffset: 4, as: UInt32.self).bigEndian)
+        }
+
+        let numRows = data.withUnsafeBytes { ptr -> Int in
+            Int(ptr.load(fromByteOffset: 8, as: UInt32.self).bigEndian)
+        }
+
+        let numCols = data.withUnsafeBytes { ptr -> Int in
+            Int(ptr.load(fromByteOffset: 12, as: UInt32.self).bigEndian)
+        }
+
+        guard numRows == 28 && numCols == 28 else {
+            throw TrainingError.invalidDataset("Unexpected MNIST image size: \(numRows)x\(numCols)")
+        }
+
+        let pixelsPerImage = numRows * numCols
+        let headerSize = 16
+
+        guard data.count >= headerSize + numImages * pixelsPerImage else {
+            throw TrainingError.invalidDataset("MNIST images file truncated")
+        }
+
+        var images: [[Float]] = []
+        images.reserveCapacity(numImages)
+
+        for i in 0..<numImages {
+            let offset = headerSize + i * pixelsPerImage
+            var pixels: [Float] = []
+            pixels.reserveCapacity(pixelsPerImage)
+
+            for j in 0..<pixelsPerImage {
+                let byte = data[offset + j]
+                // Normalize to [0, 1]
+                pixels.append(Float(byte) / 255.0)
+            }
+            images.append(pixels)
+        }
+
+        print("[MNIST] Loaded \(numImages) images")
+        return images
+    }
+
+    private static func loadLabels(from path: URL) throws -> [UInt8] {
+        // Load and decompress gzip data
+        let compressedData = try Data(contentsOf: path)
+        let data = try decompressGzip(compressedData)
+
+        // Parse IDX file format
+        // Magic number: 0x00000801 (2049) for labels
+        guard data.count > 8 else {
+            throw TrainingError.invalidDataset("MNIST labels file too small")
+        }
+
+        let magic = data.withUnsafeBytes { ptr -> UInt32 in
+            ptr.load(fromByteOffset: 0, as: UInt32.self).bigEndian
+        }
+
+        guard magic == 2049 else {
+            throw TrainingError.invalidDataset("Invalid MNIST labels magic number: \(magic)")
+        }
+
+        let numLabels = data.withUnsafeBytes { ptr -> Int in
+            Int(ptr.load(fromByteOffset: 4, as: UInt32.self).bigEndian)
+        }
+
+        let headerSize = 8
+
+        guard data.count >= headerSize + numLabels else {
+            throw TrainingError.invalidDataset("MNIST labels file truncated")
+        }
+
+        var labels: [UInt8] = []
+        labels.reserveCapacity(numLabels)
+
+        for i in 0..<numLabels {
+            labels.append(data[headerSize + i])
+        }
+
+        print("[MNIST] Loaded \(numLabels) labels")
+        return labels
+    }
+
+    private static func decompressGzip(_ data: Data) throws -> Data {
+        // Use zlib to decompress gzip data
+        guard data.count > 2 else {
+            throw TrainingError.invalidDataset("Data too small to be gzip")
+        }
+
+        // Check gzip magic number
+        guard data[0] == 0x1f && data[1] == 0x8b else {
+            throw TrainingError.invalidDataset("Not a gzip file")
+        }
+
+        // Skip gzip header (minimum 10 bytes for standard header)
+        // Header structure: magic(2) + method(1) + flags(1) + mtime(4) + xfl(1) + os(1)
+        let headerSize = 10
+        let compressedPayload = Array(data.dropFirst(headerSize))
+
+        // Allocate destination buffer (MNIST files decompress to ~47MB max)
+        let decompressedSize = 50_000_000  // 50MB should be enough
+        let decompressedBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: decompressedSize)
+        defer { decompressedBuffer.deallocate() }
+
+        let actualSize = compressedPayload.withUnsafeBufferPointer { srcBuffer -> Int in
+            compression_decode_buffer(
+                decompressedBuffer,
+                decompressedSize,
+                srcBuffer.baseAddress!,
+                srcBuffer.count,
+                nil,
+                COMPRESSION_ZLIB
+            )
+        }
+
+        guard actualSize > 0 else {
+            throw TrainingError.invalidDataset("Decompression failed")
+        }
+
+        return Data(bytes: decompressedBuffer, count: actualSize)
+    }
+
+    // MARK: - Dataset Protocol
 
     func getBatch(indices: [Int]) -> (inputs: MLXArray, labels: MLXArray) {
         let indicesArray = MLXArray(indices.map { Int32($0) })
         let batchInputs = images[indicesArray]
-        let batchLabels = labels[indicesArray]
+        let batchLabels = labelsArray[indicesArray]
         return (batchInputs, batchLabels)
     }
 
