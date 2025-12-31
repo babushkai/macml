@@ -16,7 +16,7 @@ let package = Package(
         // MLX Swift - Apple Silicon native ML framework
         .package(url: "https://github.com/ml-explore/mlx-swift.git", from: "0.29.0"),
         // GRDB - SQLite database
-        .package(url: "https://github.com/groue/GRDB.swift.git", from: "6.29.0"),
+        .package(url: "https://github.com/groue/GRDB.swift.git", from: "7.9.0"),
         // Swift Crypto for artifact hashing
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.2.0"),
     ],
