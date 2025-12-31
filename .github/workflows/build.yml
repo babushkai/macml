@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 env:
   APP_NAME: Performant3
 
@@ -38,9 +42,11 @@ jobs:
 
       - name: Build application
         run: |
+          # Use a known derivedDataPath for reliable artifact location
           xcodebuild -scheme Performant3 \
             -destination 'platform=macOS' \
             -configuration Release \
+            -derivedDataPath "${{ runner.temp }}/DerivedData" \
             build
 
       - name: Package application bundle
@@ -54,18 +60,17 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-          # Find the build products directory
-          DERIVED_DATA=$(xcodebuild -scheme Performant3 -showBuildSettings 2>/dev/null | grep -m 1 'BUILT_PRODUCTS_DIR' | awk '{print $3}')
-
-          if [ -z "$DERIVED_DATA" ]; then
-            DERIVED_DATA=$(find ~/Library/Developer/Xcode/DerivedData -name "peformant3-*" -type d 2>/dev/null | head -1)/Build/Products/Release
-          fi
+          # Use the known derivedDataPath
+          DERIVED_DATA="${{ runner.temp }}/DerivedData/Build/Products/Release"
 
           echo "Build products at: $DERIVED_DATA"
+          ls -la "$DERIVED_DATA" || echo "Directory listing failed"
 
           # Verify executable exists
           if [ ! -f "$DERIVED_DATA/Performant3" ]; then
             echo "ERROR: Executable not found!"
+            echo "Searching for executable..."
+            find "${{ runner.temp }}/DerivedData" -name "Performant3" -type f 2>/dev/null || true
             exit 1
           fi
 

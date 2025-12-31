@@ -106,6 +106,7 @@ jobs:
           xcodebuild -scheme Performant3 \
             -destination 'platform=macOS' \
             -configuration Release \
+            -derivedDataPath "${{ runner.temp }}/DerivedData" \
             build
 
       - name: Package application bundle
@@ -113,12 +114,8 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
         run: |
-          # Find the build products directory
-          DERIVED_DATA=$(xcodebuild -scheme Performant3 -showBuildSettings 2>/dev/null | grep -m 1 'BUILT_PRODUCTS_DIR' | awk '{print $3}')
-
-          if [ -z "$DERIVED_DATA" ]; then
-            DERIVED_DATA=$(find ~/Library/Developer/Xcode/DerivedData -name "peformant3-*" -type d 2>/dev/null | head -1)/Build/Products/Release
-          fi
+          # Use the known derivedDataPath
+          DERIVED_DATA="${{ runner.temp }}/DerivedData/Build/Products/Release"
 
           echo "Build products at: $DERIVED_DATA"
 
