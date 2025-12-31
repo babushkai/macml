@@ -13,7 +13,9 @@ actor PythonEnvironmentManager {
         "torchvision",
         "numpy",
         "pillow",
-        "pyyaml"
+        "pyyaml",
+        "coremltools",
+        "safetensors"
     ]
 
     enum Status: Equatable {
