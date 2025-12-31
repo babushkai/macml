@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Generate Performant3 app icon."""
+"""Generate Performant3 app icon - sophisticated design."""
 
 import subprocess
-import os
 import math
 from pathlib import Path
 
@@ -15,152 +14,171 @@ except ImportError:
 
 
 def create_icon(size: int) -> Image.Image:
-    """Create the Performant3 icon at the specified size."""
-    # Create high-res version for quality
+    """Create a sophisticated Performant3 icon."""
     scale = 4
     s = size * scale
 
     img = Image.new('RGBA', (s, s), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # Rounded rectangle background with gradient
-    corner_radius = int(s * 0.22)  # macOS-style rounded corners
+    corner_radius = int(s * 0.22)
 
-    # Create gradient background (deep blue to purple - ML/AI colors)
+    # Premium gradient: dark charcoal to deep slate blue
     for y in range(s):
         ratio = y / s
-        # Gradient from deep blue (#1a1a2e) to purple (#4a1a6b) to accent (#6b21a8)
-        r = int(26 + (74 - 26) * ratio + (107 - 74) * max(0, ratio - 0.5) * 2)
-        g = int(26 + (26 - 26) * ratio + (33 - 26) * max(0, ratio - 0.5) * 2)
-        b = int(46 + (107 - 46) * ratio + (168 - 107) * max(0, ratio - 0.5) * 2)
+        # Dark sophisticated gradient
+        r = int(18 + (28 - 18) * ratio)
+        g = int(20 + (32 - 20) * ratio)
+        b = int(28 + (48 - 28) * ratio)
         draw.line([(0, y), (s, y)], fill=(r, g, b, 255))
 
     # Create mask for rounded corners
     mask = Image.new('L', (s, s), 0)
     mask_draw = ImageDraw.Draw(mask)
     mask_draw.rounded_rectangle([(0, 0), (s-1, s-1)], radius=corner_radius, fill=255)
-
-    # Apply mask
     img.putalpha(mask)
 
-    # Draw neural network / performance visualization
     center_x, center_y = s // 2, s // 2
 
-    # Draw stylized "P3" or neural network nodes
-    # Main circle (representing a node)
-    node_radius = int(s * 0.18)
+    # Subtle grid pattern for depth
+    grid_color = (255, 255, 255, 8)
+    grid_spacing = int(s * 0.08)
+    for i in range(0, s, grid_spacing):
+        draw.line([(i, 0), (i, s)], fill=grid_color, width=1)
+        draw.line([(0, i), (s, i)], fill=grid_color, width=1)
 
-    # Glow effect
+    # Performance bars - abstract rising metrics visualization
+    bar_count = 5
+    bar_width = int(s * 0.08)
+    bar_gap = int(s * 0.04)
+    total_width = bar_count * bar_width + (bar_count - 1) * bar_gap
+    start_x = center_x - total_width // 2
+    base_y = int(s * 0.72)
+
+    # Bar heights creating an ascending pattern
+    heights = [0.25, 0.4, 0.55, 0.45, 0.65]
+
+    # Glow layer
     glow_img = Image.new('RGBA', (s, s), (0, 0, 0, 0))
     glow_draw = ImageDraw.Draw(glow_img)
 
-    # Draw connection lines (neural network style)
-    line_color = (255, 255, 255, 60)
-    line_width = max(2, int(s * 0.015))
+    for i, h in enumerate(heights):
+        x = start_x + i * (bar_width + bar_gap)
+        bar_height = int(s * h * 0.5)
+        top_y = base_y - bar_height
 
-    # Nodes positions
-    nodes = [
-        (center_x, center_y),  # Center
-        (center_x - int(s * 0.25), center_y - int(s * 0.2)),  # Top left
-        (center_x + int(s * 0.25), center_y - int(s * 0.2)),  # Top right
-        (center_x - int(s * 0.25), center_y + int(s * 0.2)),  # Bottom left
-        (center_x + int(s * 0.25), center_y + int(s * 0.2)),  # Bottom right
-    ]
-
-    # Draw connections
-    for i, (nx, ny) in enumerate(nodes[1:], 1):
-        draw.line([(center_x, center_y), (nx, ny)], fill=line_color, width=line_width)
-
-    # Draw outer nodes (smaller)
-    small_radius = int(s * 0.06)
-    for nx, ny in nodes[1:]:
-        # Glow
-        for r in range(small_radius + 10, small_radius, -2):
-            alpha = int(30 * (1 - (r - small_radius) / 10))
-            glow_draw.ellipse(
-                [(nx - r, ny - r), (nx + r, ny + r)],
-                fill=(100, 200, 255, alpha)
+        # Glow effect
+        for glow in range(15, 0, -3):
+            alpha = int(20 * (1 - glow / 15))
+            glow_draw.rounded_rectangle(
+                [(x - glow, top_y - glow), (x + bar_width + glow, base_y + glow)],
+                radius=int(bar_width * 0.3),
+                fill=(100, 180, 255, alpha)
             )
-        # Node
+
+        # Gradient fill for bars
+        for by in range(top_y, base_y):
+            ratio = (by - top_y) / max(1, (base_y - top_y))
+            # Cyan to blue gradient
+            br = int(60 + (40 - 60) * ratio)
+            bg = int(200 + (140 - 200) * ratio)
+            bb = int(255 + (220 - 255) * ratio)
+            draw.line([(x, by), (x + bar_width, by)], fill=(br, bg, bb, 255))
+
+        # Top rounded cap
+        cap_radius = bar_width // 2
         draw.ellipse(
-            [(nx - small_radius, ny - small_radius), (nx + small_radius, ny + small_radius)],
-            fill=(80, 180, 255, 255)
-        )
-        # Inner highlight
-        highlight_r = int(small_radius * 0.6)
-        draw.ellipse(
-            [(nx - highlight_r, ny - highlight_r + 1), (nx + highlight_r, ny + highlight_r + 1)],
-            fill=(150, 220, 255, 200)
+            [(x, top_y - cap_radius), (x + bar_width, top_y + cap_radius)],
+            fill=(80, 210, 255, 255)
         )
 
-    # Draw center node (larger, with "3" or performance indicator)
-    # Glow effect for center
-    for r in range(node_radius + 20, node_radius, -2):
-        alpha = int(50 * (1 - (r - node_radius) / 20))
-        glow_draw.ellipse(
-            [(center_x - r, center_y - r), (center_x + r, center_y + r)],
-            fill=(120, 100, 255, alpha)
-        )
+        # Subtle highlight on left edge
+        highlight_width = max(2, int(bar_width * 0.15))
+        for hy in range(top_y, base_y):
+            alpha = int(60 * (1 - (hy - top_y) / max(1, (base_y - top_y))))
+            draw.line(
+                [(x, hy), (x + highlight_width, hy)],
+                fill=(255, 255, 255, alpha)
+            )
 
     # Composite glow
     img = Image.alpha_composite(img, glow_img)
     draw = ImageDraw.Draw(img)
 
-    # Center node background
-    draw.ellipse(
-        [(center_x - node_radius, center_y - node_radius),
-         (center_x + node_radius, center_y + node_radius)],
-        fill=(100, 80, 200, 255)
-    )
-
-    # Inner gradient circle
-    inner_radius = int(node_radius * 0.85)
-    draw.ellipse(
-        [(center_x - inner_radius, center_y - inner_radius),
-         (center_x + inner_radius, center_y + inner_radius)],
-        fill=(130, 100, 220, 255)
-    )
-
-    # Draw "3" in the center
+    # Stylized "P3" text - clean typography
     try:
-        # Try to use SF Pro or system font
-        font_size = int(s * 0.22)
+        font_size = int(s * 0.18)
         try:
-            font = ImageFont.truetype("/System/Library/Fonts/SFNSDisplay.ttf", font_size)
+            font = ImageFont.truetype("/System/Library/Fonts/SFNS.ttf", font_size)
         except:
             try:
-                font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", font_size)
+                font = ImageFont.truetype("/System/Library/Fonts/SFNSDisplay.ttf", font_size)
             except:
-                font = ImageFont.load_default()
+                try:
+                    font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", font_size)
+                except:
+                    font = ImageFont.load_default()
     except:
         font = ImageFont.load_default()
 
-    # Draw "3" with shadow
-    text = "3"
+    text = "P3"
     bbox = draw.textbbox((0, 0), text, font=font)
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
     text_x = center_x - text_w // 2
-    text_y = center_y - text_h // 2 - int(s * 0.02)
+    text_y = int(s * 0.15)
 
-    # Shadow
-    draw.text((text_x + 2, text_y + 2), text, fill=(50, 30, 100, 150), font=font)
-    # Main text
-    draw.text((text_x, text_y), text, fill=(255, 255, 255, 255), font=font)
+    # Subtle shadow
+    shadow_offset = max(2, int(s * 0.005))
+    draw.text(
+        (text_x + shadow_offset, text_y + shadow_offset),
+        text,
+        fill=(0, 0, 0, 80),
+        font=font
+    )
 
-    # Add subtle speed lines / performance indicator
-    for i in range(3):
-        line_y = center_y + int(s * 0.32) + i * int(s * 0.04)
-        line_start = center_x - int(s * 0.15) + i * int(s * 0.03)
-        line_end = center_x + int(s * 0.15) - i * int(s * 0.03)
-        alpha = 150 - i * 40
+    # Main text with subtle gradient effect
+    draw.text((text_x, text_y), text, fill=(255, 255, 255, 240), font=font)
+
+    # Accent line under text
+    line_y = text_y + text_h + int(s * 0.03)
+    line_width = int(text_w * 0.8)
+    line_x_start = center_x - line_width // 2
+    for lx in range(line_x_start, line_x_start + line_width):
+        ratio = (lx - line_x_start) / line_width
+        # Gradient from cyan to blue
+        lr = int(60 + (100 - 60) * ratio)
+        lg = int(200 + (160 - 200) * ratio)
+        lb = int(255 + (240 - 255) * ratio)
         draw.line(
-            [(line_start, line_y), (line_end, line_y)],
-            fill=(255, 255, 255, alpha),
-            width=max(2, int(s * 0.012))
+            [(lx, line_y), (lx, line_y + max(2, int(s * 0.008)))],
+            fill=(lr, lg, lb, 200)
         )
 
-    # Resize to target size with high quality
+    # Subtle corner accent - premium detail
+    accent_size = int(s * 0.06)
+    accent_color = (80, 200, 255, 40)
+
+    # Top-right corner accent
+    for i in range(accent_size):
+        alpha = int(40 * (1 - i / accent_size))
+        draw.line(
+            [(s - corner_radius - accent_size + i, corner_radius // 2),
+             (s - corner_radius // 2, corner_radius // 2 + accent_size - i)],
+            fill=(80, 200, 255, alpha),
+            width=2
+        )
+
+    # Bottom edge glow
+    for i in range(20):
+        alpha = int(15 * (1 - i / 20))
+        y = s - corner_radius - i
+        draw.line(
+            [(corner_radius, y), (s - corner_radius, y)],
+            fill=(100, 200, 255, alpha)
+        )
+
+    # Resize with high quality
     img = img.resize((size, size), Image.Resampling.LANCZOS)
 
     return img
@@ -171,7 +189,6 @@ def create_iconset(output_dir: Path):
     iconset_dir = output_dir / "AppIcon.iconset"
     iconset_dir.mkdir(parents=True, exist_ok=True)
 
-    # macOS icon sizes
     sizes = [
         (16, "icon_16x16.png"),
         (32, "icon_16x16@2x.png"),
@@ -209,16 +226,9 @@ def main():
     script_dir = Path(__file__).parent
     resources_dir = script_dir
 
-    # Create iconset
     iconset_dir = create_iconset(resources_dir)
-
-    # Convert to icns
     icns_path = resources_dir / "AppIcon.icns"
     create_icns(iconset_dir, icns_path)
-
-    # Cleanup iconset directory (optional, keep for debugging)
-    # import shutil
-    # shutil.rmtree(iconset_dir)
 
     print("\nDone! Icon created at:", icns_path)
 
