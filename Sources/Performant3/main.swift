@@ -206,22 +206,38 @@ class AppState: ObservableObject {
         loadingMessage = "Loading data..."
 
         do {
+            print("[DEBUG] Loading models...")
             models = try await storage.loadModels()
+            print("[DEBUG] Loaded \(models.count) models")
+
+            print("[DEBUG] Loading runs...")
             runs = try await storage.loadRuns()
+            print("[DEBUG] Loaded \(runs.count) runs")
+
+            print("[DEBUG] Loading datasets...")
             datasets = try await storage.loadDatasets()
+            print("[DEBUG] Loaded \(datasets.count) datasets")
+
+            print("[DEBUG] Loading settings...")
             settings = try await storage.loadSettings()
+            print("[DEBUG] Settings loaded")
 
             // Try to load inference history from database first, fall back to JSON
             if databaseInitialized {
+                print("[DEBUG] Loading inference history from database...")
                 let repo = InferenceResultRepository()
                 inferenceHistory = (try? await repo.findAll(limit: 100)) ?? []
+                print("[DEBUG] Loaded \(inferenceHistory.count) inference results from database")
             }
 
             // If database has no results, try JSON as fallback
             if inferenceHistory.isEmpty {
+                print("[DEBUG] Loading inference history from JSON...")
                 inferenceHistory = try await storage.loadInferenceHistory()
+                print("[DEBUG] Loaded \(inferenceHistory.count) inference results from JSON")
             }
         } catch {
+            print("[DEBUG] Load error: \(error)")
             errorMessage = "Failed to load data: \(error.localizedDescription)"
         }
 
