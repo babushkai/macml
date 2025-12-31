@@ -18,7 +18,7 @@ let package = Package(
         // GRDB - SQLite database
         .package(url: "https://github.com/groue/GRDB.swift.git", from: "6.29.0"),
         // Swift Crypto for artifact hashing
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "4.2.0"),
     ],
     targets: [
         .executableTarget(
