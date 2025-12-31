@@ -135,6 +135,13 @@ struct Performant3App: App {
 
 @MainActor
 class AppState: ObservableObject {
+    // MARK: - Constants
+
+    private enum Constants {
+        static let maxInferenceHistoryCount = 100
+        static let defaultSuccessMessageDuration: Double = 3.0
+    }
+
     // Data
     @Published var models: [MLModel] = []
     @Published var runs: [TrainingRun] = []
@@ -161,7 +168,7 @@ class AppState: ObservableObject {
     @Published var successMessage: String?
 
     /// Show a success message that auto-dismisses after a delay
-    func showSuccess(_ message: String, duration: Double = 3.0) {
+    func showSuccess(_ message: String, duration: Double = Constants.defaultSuccessMessageDuration) {
         successMessage = message
         Task {
             try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
@@ -226,7 +233,7 @@ class AppState: ObservableObject {
             if databaseInitialized {
                 print("[DEBUG] Loading inference history from database...")
                 let repo = InferenceResultRepository()
-                inferenceHistory = (try? await repo.findAll(limit: 100)) ?? []
+                inferenceHistory = (try? await repo.findAll(limit: Constants.maxInferenceHistoryCount)) ?? []
                 print("[DEBUG] Loaded \(inferenceHistory.count) inference results from database")
             }
 
@@ -653,9 +660,9 @@ class AppState: ObservableObject {
 
             inferenceHistory.insert(result, at: 0)
 
-            // Keep only last 100 results in memory
-            if inferenceHistory.count > 100 {
-                inferenceHistory = Array(inferenceHistory.prefix(100))
+            // Keep only last N results in memory
+            if inferenceHistory.count > Constants.maxInferenceHistoryCount {
+                inferenceHistory = Array(inferenceHistory.prefix(Constants.maxInferenceHistoryCount))
             }
 
             // Persist to database
@@ -663,7 +670,7 @@ class AppState: ObservableObject {
                 let repo = InferenceResultRepository()
                 try? await repo.create(result)
                 // Prune old results in database too
-                try? await repo.pruneToLimit(100)
+                try? await repo.pruneToLimit(Constants.maxInferenceHistoryCount)
             }
 
             await saveData()
