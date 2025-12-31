@@ -76,10 +76,10 @@ enum ModelArchitecture: Codable, Sendable {
     static var defaultMLP: ModelArchitecture {
         .mlp(MLPConfig(
             inputSize: 784,
-            hiddenSizes: [256, 128],
+            hiddenSizes: [512, 256, 128],  // Larger network for better accuracy
             outputSize: 10,
             activation: .relu,
-            dropout: 0.2
+            dropout: 0.1  // Lower dropout for MNIST
         ))
     }
 

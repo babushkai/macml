@@ -667,14 +667,14 @@ struct TrainingConfig: Codable {
 
     static var `default`: TrainingConfig {
         TrainingConfig(
-            epochs: 10,
-            batchSize: 32,
+            epochs: 30,  // Increased from 10 - MNIST needs more epochs for >95% accuracy
+            batchSize: 64,  // Larger batches for better gradient estimates
             learningRate: 0.001,
             optimizer: .adam,
             lossFunction: .crossEntropy,
             validationSplit: 0.2,
             earlyStopping: true,
-            patience: 3,
+            patience: 5,  // More patience before stopping
             architecture: .mlp,
             saveCheckpoints: true,
             checkpointFrequency: 5,
