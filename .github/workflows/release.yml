@@ -25,6 +25,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write
+
 env:
   APP_NAME: Performant3
   BUNDLE_ID: com.performant3.app
