@@ -23,7 +23,32 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        Form {
+        VStack(spacing: 0) {
+            // Header
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.surface)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "gear")
+                        .font(.system(size: 20))
+                        .foregroundColor(AppTheme.textPrimary)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Settings")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(AppTheme.textPrimary)
+                    Text("Configure training defaults and preferences")
+                        .font(.caption)
+                        .foregroundColor(AppTheme.textMuted)
+                }
+                Spacer()
+            }
+            .padding()
+            .background(AppTheme.background)
+
+            Form {
             // General Settings
             Section("General") {
                 Toggle("Auto-save training checkpoints", isOn: $appState.settings.autoSaveCheckpoints)
@@ -260,5 +285,7 @@ struct SettingsView: View {
         } message: {
             Text("This will permanently delete all models, datasets, training runs, and settings. This action cannot be undone.")
         }
+        }
+        .background(AppTheme.background)
     }
 }

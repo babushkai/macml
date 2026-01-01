@@ -80,67 +80,94 @@ struct DatasetsView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Datasets")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    HStack(spacing: 16) {
-                        Label("\(activeCount) active", systemImage: "folder")
-                        if archivedCount > 0 {
-                            Label("\(archivedCount) archived", systemImage: "archivebox")
-                                .foregroundColor(.secondary)
+            VStack(spacing: 16) {
+                HStack(alignment: .top) {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(AppTheme.warningGradient)
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "folder.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.white)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Datasets")
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(AppTheme.textPrimary)
+
+                            HStack(spacing: 12) {
+                                Label("\(activeCount) active", systemImage: "folder")
+                                if archivedCount > 0 {
+                                    Label("\(archivedCount) archived", systemImage: "archivebox")
+                                        .foregroundColor(AppTheme.textMuted)
+                                }
+                            }
+                            .font(.caption)
+                            .foregroundColor(AppTheme.textMuted)
                         }
                     }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                }
 
-                Spacer()
+                    Spacer()
 
-                HStack(spacing: 8) {
-                    Menu {
-                        Toggle(isOn: $showArchiveFilter) {
-                            Label("Show Archived (\(archivedCount))", systemImage: "archivebox")
+                    HStack(spacing: 8) {
+                        Menu {
+                            Toggle(isOn: $showArchiveFilter) {
+                                Label("Show Archived (\(archivedCount))", systemImage: "archivebox")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .font(.title2)
+                                .foregroundColor(AppTheme.textMuted)
                         }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .font(.title2)
-                    }
-                    .menuStyle(.borderlessButton)
-                    .frame(width: 30)
+                        .menuStyle(.borderlessButton)
+                        .frame(width: 30)
 
-                    Button(action: { showCreateWizard = true }) {
-                        Label("Create Dataset", systemImage: "plus")
-                    }
-                    .buttonStyle(.bordered)
+                        Button(action: { showCreateWizard = true }) {
+                            Label("Create Dataset", systemImage: "plus")
+                        }
+                        .buttonStyle(.bordered)
 
-                    Button(action: { appState.showImportDatasetSheet = true }) {
-                        Label("Import Dataset", systemImage: "folder.badge.plus")
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-            }
-            .padding()
-
-            // Filters
-            HStack(spacing: 12) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-                    TextField("Search datasets...", text: $searchText)
-                        .textFieldStyle(.plain)
-                    if !searchText.isEmpty {
-                        Button(action: { searchText = "" }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.secondary)
+                        Button(action: { appState.showImportDatasetSheet = true }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "folder.badge.plus")
+                                Text("Import Dataset")
+                            }
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(AppTheme.warningGradient)
+                            .cornerRadius(8)
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(8)
-                .background(Color(NSColor.controlBackgroundColor))
-                .cornerRadius(8)
+
+                // Filters
+                HStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(AppTheme.textMuted)
+                    TextField("Search datasets...", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .foregroundColor(AppTheme.textPrimary)
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(AppTheme.textMuted)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(10)
+                .background(AppTheme.surface)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                )
 
                 Picker("Type", selection: $selectedType) {
                     Text("All Types").tag(nil as DatasetType?)
@@ -158,8 +185,9 @@ struct DatasetsView: View {
                 }
                 .frame(width: 120)
             }
-            .padding(.horizontal)
-            .padding(.bottom, 12)
+            }
+            .padding()
+            .background(AppTheme.background)
 
             Divider()
 
@@ -191,7 +219,7 @@ struct DatasetsView: View {
                 }
             }
         }
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(AppTheme.background)
         .overlay {
             if isDraggingOver {
                 DatasetDropZone()
@@ -366,11 +394,11 @@ struct DatasetCard: View {
             }
         }
         .padding()
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(isHovered ? AppTheme.surfaceHover : AppTheme.surface)
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isHovered ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 2)
+                .stroke(isHovered ? AppTheme.primary.opacity(0.3) : Color.white.opacity(0.05), lineWidth: 1)
         )
         .opacity(dataset.status.isActive ? 1.0 : 0.7)
         .onHover { hovering in

@@ -59,24 +59,37 @@ struct ModelsView: View {
             // Header
             VStack(spacing: 16) {
                 HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Models")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-
-                        HStack(spacing: 16) {
-                            Label("\(appState.models.count) total", systemImage: "cpu")
-                            if readyModelsCount > 0 {
-                                Label("\(readyModelsCount) ready", systemImage: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(AppTheme.primaryGradient)
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "cpu.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.white)
                             }
-                            if trainingModelsCount > 0 {
-                                Label("\(trainingModelsCount) training", systemImage: "bolt.fill")
-                                    .foregroundColor(.orange)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Models")
+                                    .font(.system(size: 28, weight: .bold))
+                                    .foregroundColor(AppTheme.textPrimary)
+
+                                HStack(spacing: 12) {
+                                    Label("\(appState.models.count) total", systemImage: "square.stack.3d.up")
+                                    if readyModelsCount > 0 {
+                                        Label("\(readyModelsCount) ready", systemImage: "checkmark.circle.fill")
+                                            .foregroundColor(AppTheme.success)
+                                    }
+                                    if trainingModelsCount > 0 {
+                                        Label("\(trainingModelsCount) training", systemImage: "bolt.fill")
+                                            .foregroundColor(AppTheme.warning)
+                                    }
+                                }
+                                .font(.caption)
+                                .foregroundColor(AppTheme.textMuted)
                             }
                         }
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                     }
 
                     Spacer()
@@ -123,6 +136,7 @@ struct ModelsView: View {
                             } label: {
                                 Image(systemName: "ellipsis.circle")
                                     .font(.title2)
+                                    .foregroundColor(AppTheme.textMuted)
                             }
                             .menuStyle(.borderlessButton)
                             .frame(width: 30)
@@ -134,9 +148,18 @@ struct ModelsView: View {
                         .buttonStyle(.bordered)
 
                         Button(action: { appState.showNewModelSheet = true }) {
-                            Label("Import Model", systemImage: "square.and.arrow.down")
+                            HStack(spacing: 6) {
+                                Image(systemName: "square.and.arrow.down")
+                                Text("Import Model")
+                            }
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(AppTheme.primaryGradient)
+                            .cornerRadius(8)
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.plain)
                     }
                 }
 
@@ -145,20 +168,25 @@ struct ModelsView: View {
                     // Search bar
                     HStack {
                         Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppTheme.textMuted)
                         TextField("Search models...", text: $searchText)
                             .textFieldStyle(.plain)
+                            .foregroundColor(AppTheme.textPrimary)
                         if !searchText.isEmpty {
                             Button(action: { searchText = "" }) {
                                 Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(AppTheme.textMuted)
                             }
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(8)
-                    .background(Color(NSColor.controlBackgroundColor))
-                    .cornerRadius(8)
+                    .padding(10)
+                    .background(AppTheme.surface)
+                    .cornerRadius(10)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.white.opacity(0.05), lineWidth: 1)
+                    )
 
                     Picker("Framework", selection: $selectedFramework) {
                         Text("All Frameworks").tag(nil as MLFramework?)
@@ -178,6 +206,7 @@ struct ModelsView: View {
                 }
             }
             .padding()
+            .background(AppTheme.background)
 
             // Drop zone when empty or dragging
             if appState.models.isEmpty || isDragging {

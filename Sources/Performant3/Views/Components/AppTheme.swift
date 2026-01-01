@@ -37,6 +37,18 @@ enum AppTheme {
         endPoint: .bottomTrailing
     )
 
+    static let secondaryGradient = LinearGradient(
+        colors: [secondary, Color(red: 0.7, green: 0.4, blue: 1.0)],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    static let warningGradient = LinearGradient(
+        colors: [warning, Color(red: 1.0, green: 0.55, blue: 0.2)],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
     // Text colors
     static let textPrimary = Color.white
     static let textSecondary = Color(white: 0.65)

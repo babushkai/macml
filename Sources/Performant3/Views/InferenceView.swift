@@ -13,7 +13,7 @@ struct InferenceView: View {
             // Right: Results
             InferenceResultsPanel()
         }
-        .background(Color(NSColor.windowBackgroundColor))
+        .background(AppTheme.background)
     }
 }
 
@@ -57,17 +57,28 @@ struct InferenceInputPanel: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.secondaryGradient)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "wand.and.stars")
+                        .font(.system(size: 20))
+                        .foregroundColor(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
                     Text("Inference")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(AppTheme.textPrimary)
                     Text("Run predictions with your trained models")
-                        .foregroundColor(.secondary)
+                        .font(.caption)
+                        .foregroundColor(AppTheme.textMuted)
                 }
                 Spacer()
             }
             .padding()
+            .background(AppTheme.background)
 
             Divider()
 
@@ -209,18 +220,24 @@ struct StepSection<Content: View>: View {
             HStack(spacing: 12) {
                 // Step number circle
                 ZStack {
-                    Circle()
-                        .fill(isEnabled ? Color.accentColor : Color.secondary.opacity(0.3))
-                        .frame(width: 32, height: 32)
+                    if isEnabled {
+                        Circle()
+                            .fill(AppTheme.primaryGradient)
+                            .frame(width: 32, height: 32)
+                    } else {
+                        Circle()
+                            .fill(AppTheme.surface)
+                            .frame(width: 32, height: 32)
+                    }
                     Text("\(number)")
                         .font(.headline)
-                        .foregroundColor(isEnabled ? .white : .secondary)
+                        .foregroundColor(isEnabled ? .white : AppTheme.textMuted)
                 }
 
                 Text(title)
                     .font(.title3)
                     .fontWeight(.semibold)
-                    .foregroundColor(isEnabled ? .primary : .secondary)
+                    .foregroundColor(isEnabled ? AppTheme.textPrimary : AppTheme.textMuted)
             }
 
             content
@@ -271,8 +288,12 @@ struct NoTrainedModelsView: View {
         }
         .padding(32)
         .frame(maxWidth: .infinity)
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(AppTheme.surface)
         .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+        )
     }
 }
 
@@ -402,10 +423,10 @@ struct TrainedModelCard: View {
             .padding()
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(NSColor.controlBackgroundColor))
+                    .fill(AppTheme.surface)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                            .stroke(isSelected ? AppTheme.primary : Color.white.opacity(0.05), lineWidth: isSelected ? 2 : 1)
                     )
             )
         }
@@ -546,7 +567,7 @@ struct ImageDropZone: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(AppTheme.surface)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
@@ -893,6 +914,6 @@ struct InferenceResultDetail: View {
             .foregroundColor(.secondary)
         }
         .padding()
-        .background(Color(NSColor.controlBackgroundColor))
+        .background(AppTheme.surface)
     }
 }

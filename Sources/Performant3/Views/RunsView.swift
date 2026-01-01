@@ -66,24 +66,35 @@ struct RunsView: View {
                 // Header
                 VStack(spacing: 16) {
                     HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Training Runs")
-                                .font(.largeTitle)
-                                .fontWeight(.bold)
-
-                            HStack(spacing: 16) {
-                                Label("\(appState.runs.count) total", systemImage: "number")
-                                if activeRunsCount > 0 {
-                                    Label("\(activeRunsCount) active", systemImage: "bolt.fill")
-                                        .foregroundColor(.orange)
-                                }
-                                if failedRunsCount > 0 {
-                                    Label("\(failedRunsCount) failed", systemImage: "exclamationmark.triangle.fill")
-                                        .foregroundColor(.red)
-                                }
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(AppTheme.successGradient)
+                                    .frame(width: 44, height: 44)
+                                Image(systemName: "play.circle.fill")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.white)
                             }
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Training Runs")
+                                    .font(.system(size: 28, weight: .bold))
+                                    .foregroundColor(AppTheme.textPrimary)
+
+                                HStack(spacing: 12) {
+                                    Label("\(appState.runs.count) total", systemImage: "number")
+                                    if activeRunsCount > 0 {
+                                        Label("\(activeRunsCount) active", systemImage: "bolt.fill")
+                                            .foregroundColor(AppTheme.warning)
+                                    }
+                                    if failedRunsCount > 0 {
+                                        Label("\(failedRunsCount) failed", systemImage: "exclamationmark.triangle.fill")
+                                            .foregroundColor(AppTheme.error)
+                                    }
+                                }
+                                .font(.caption)
+                                .foregroundColor(AppTheme.textMuted)
+                            }
                         }
 
                         Spacer()
