@@ -201,8 +201,53 @@ struct ProgressRing: View {
     }
 }
 
-// MARK: - HuggingFace Model Hub Data
+// MARK: - Model Architecture Templates (Production-Ready)
 
+struct ModelTemplate: Identifiable {
+    let id: String
+    let name: String
+    let description: String
+    let architectureType: String
+    let task: String
+    let icon: String
+}
+
+let modelTemplates: [ModelTemplate] = [
+    ModelTemplate(
+        id: "template-mlp",
+        name: "MLP Classifier",
+        description: "Multi-layer perceptron for tabular data and digit classification",
+        architectureType: "MLP",
+        task: "Classification",
+        icon: "circle.grid.3x3"
+    ),
+    ModelTemplate(
+        id: "template-cnn",
+        name: "CNN Image Classifier",
+        description: "Convolutional network optimized for image recognition",
+        architectureType: "CNN",
+        task: "Vision",
+        icon: "photo"
+    ),
+    ModelTemplate(
+        id: "template-resnet",
+        name: "ResNet Mini",
+        description: "Residual network with skip connections for deeper learning",
+        architectureType: "ResNet",
+        task: "Vision",
+        icon: "arrow.triangle.branch"
+    ),
+    ModelTemplate(
+        id: "template-transformer",
+        name: "Transformer",
+        description: "Attention-based architecture for sequence modeling",
+        architectureType: "Transformer",
+        task: "Sequence",
+        icon: "square.stack.3d.up"
+    )
+]
+
+// Legacy alias for backward compatibility
 struct HFModel: Identifiable {
     let id: String
     let name: String
@@ -213,64 +258,20 @@ struct HFModel: Identifiable {
     let icon: String
 }
 
-let popularHFModels: [HFModel] = [
+// Convert templates to HFModel format for existing views
+let popularHFModels: [HFModel] = modelTemplates.map { template in
     HFModel(
-        id: "bert-base",
-        name: "BERT Base",
-        description: "Bidirectional encoder for NLP tasks",
-        downloads: "50M+",
-        likes: 12500,
-        task: "NLP",
-        icon: "text.bubble"
-    ),
-    HFModel(
-        id: "resnet-50",
-        name: "ResNet-50",
-        description: "Deep residual network for image classification",
-        downloads: "25M+",
-        likes: 8900,
-        task: "Vision",
-        icon: "photo"
-    ),
-    HFModel(
-        id: "gpt2",
-        name: "GPT-2",
-        description: "Generative pre-trained transformer",
-        downloads: "35M+",
-        likes: 15600,
-        task: "Text Gen",
-        icon: "text.justify"
-    ),
-    HFModel(
-        id: "vit-base",
-        name: "ViT Base",
-        description: "Vision Transformer for image classification",
-        downloads: "18M+",
-        likes: 7200,
-        task: "Vision",
-        icon: "viewfinder"
-    ),
-    HFModel(
-        id: "whisper-small",
-        name: "Whisper Small",
-        description: "Speech recognition and transcription",
-        downloads: "22M+",
-        likes: 9800,
-        task: "Audio",
-        icon: "waveform"
-    ),
-    HFModel(
-        id: "yolov8",
-        name: "YOLOv8",
-        description: "Real-time object detection",
-        downloads: "15M+",
-        likes: 11200,
-        task: "Detection",
-        icon: "square.3.layers.3d"
+        id: template.id,
+        name: template.name,
+        description: template.description,
+        downloads: "MLX",
+        likes: 0,
+        task: template.task,
+        icon: template.icon
     )
-]
+}
 
-// MARK: - Popular Datasets
+// MARK: - Available Datasets (Production-Ready)
 
 struct PopularDataset: Identifiable {
     let id: String
@@ -279,55 +280,18 @@ struct PopularDataset: Identifiable {
     let samples: String
     let task: String
     let icon: String
+    let isBuiltIn: Bool
 }
 
+/// Only datasets that actually work with the MLX training pipeline
 let popularDatasets: [PopularDataset] = [
     PopularDataset(
-        id: "mnist",
-        name: "MNIST",
-        description: "Handwritten digit recognition",
-        samples: "70K",
-        task: "Classification",
-        icon: "number"
-    ),
-    PopularDataset(
-        id: "cifar10",
-        name: "CIFAR-10",
-        description: "10 classes of 32x32 images",
+        id: "builtin-mnist",
+        name: "MNIST Digits",
+        description: "60,000 handwritten digit images (28x28). Downloads automatically.",
         samples: "60K",
         task: "Classification",
-        icon: "photo.stack"
-    ),
-    PopularDataset(
-        id: "imagenet",
-        name: "ImageNet",
-        description: "Large-scale image classification",
-        samples: "14M+",
-        task: "Classification",
-        icon: "photo.on.rectangle"
-    ),
-    PopularDataset(
-        id: "coco",
-        name: "COCO",
-        description: "Object detection and segmentation",
-        samples: "330K",
-        task: "Detection",
-        icon: "square.3.layers.3d"
-    ),
-    PopularDataset(
-        id: "squad",
-        name: "SQuAD",
-        description: "Question answering dataset",
-        samples: "100K",
-        task: "QA",
-        icon: "questionmark.bubble"
-    ),
-    PopularDataset(
-        id: "librispeech",
-        name: "LibriSpeech",
-        description: "English speech recognition",
-        samples: "1K hrs",
-        task: "Speech",
-        icon: "waveform.circle"
+        icon: "number",
+        isBuiltIn: true
     )
 ]
