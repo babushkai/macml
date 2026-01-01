@@ -716,8 +716,10 @@ struct ImageDropZone: View {
 
         // Step 1: Resize image in RGB color space first (matches MLXInferenceService)
         // Drawing RGB to grayscale context directly can produce incorrect results for colored images
+        // Use pre-allocated buffer to access pixel data
+        var rgbPixelData = [UInt8](repeating: 0, count: targetSize * targetSize * 4)
         guard let rgbContext = CGContext(
-            data: nil,
+            data: &rgbPixelData,
             width: targetSize,
             height: targetSize,
             bitsPerComponent: 8,
@@ -728,14 +730,26 @@ struct ImageDropZone: View {
             return nil
         }
 
+        // Clear the context with black background
+        rgbContext.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1))
+        rgbContext.fill(CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
+
         rgbContext.interpolationQuality = .high
         // Flip to match MNIST coordinate system
         rgbContext.translateBy(x: 0, y: CGFloat(targetSize))
         rgbContext.scaleBy(x: 1.0, y: -1.0)
-        rgbContext.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
-
-        guard let rgbData = rgbContext.data else { return nil }
-        let rgbPixelData = rgbData.bindMemory(to: UInt8.self, capacity: targetSize * targetSize * 4)
+        
+        // Ensure the image is in the correct color space
+        let targetColorSpace = CGColorSpaceCreateDeviceRGB()
+        let convertedImage: CGImage
+        if let imageColorSpace = cgImage.colorSpace,
+           imageColorSpace != targetColorSpace {
+            convertedImage = cgImage.converted(to: targetColorSpace, intent: .defaultIntent, options: nil) ?? cgImage
+        } else {
+            convertedImage = cgImage
+        }
+        
+        rgbContext.draw(convertedImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
 
         // Step 2: Convert RGBA to grayscale using luminance formula (matches MLXInferenceService)
         var grayscalePixels = [UInt8](repeating: 0, count: targetSize * targetSize)
