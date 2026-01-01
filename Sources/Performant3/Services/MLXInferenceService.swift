@@ -274,15 +274,33 @@ actor MLXInferenceService {
     }
 
     private func resizeImage(_ image: CGImage, to size: CGSize) -> CGImage {
-        let context = CGContext(
+        // Ensure the image is in the correct color space for drawing
+        let targetColorSpace = CGColorSpaceCreateDeviceRGB()
+        let convertedImage: CGImage
+        if let imageColorSpace = image.colorSpace,
+           imageColorSpace != targetColorSpace {
+            // Convert to target color space if different
+            convertedImage = image.converted(to: targetColorSpace, intent: .defaultIntent, options: nil) ?? image
+        } else {
+            convertedImage = image
+        }
+        
+        guard let context = CGContext(
             data: nil,
             width: Int(size.width),
             height: Int(size.height),
             bitsPerComponent: 8,
             bytesPerRow: Int(size.width) * 4,
-            space: CGColorSpaceCreateDeviceRGB(),
+            space: targetColorSpace,
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        )!
+        ) else {
+            // Fallback: return original image if context creation fails
+            return image
+        }
+
+        // Clear the context with black background
+        context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1))
+        context.fill(CGRect(origin: .zero, size: size))
 
         context.interpolationQuality = .high
 
@@ -291,9 +309,15 @@ actor MLXInferenceService {
         context.translateBy(x: 0, y: size.height)
         context.scaleBy(x: 1.0, y: -1.0)
 
-        context.draw(image, in: CGRect(origin: .zero, size: size))
+        // Draw the image
+        context.draw(convertedImage, in: CGRect(origin: .zero, size: size))
 
-        return context.makeImage()!
+        guard let resizedImage = context.makeImage() else {
+            // Fallback: return original image if makeImage fails
+            return image
+        }
+        
+        return resizedImage
     }
 
     private func getPixelData(from image: CGImage) -> [UInt8] {
