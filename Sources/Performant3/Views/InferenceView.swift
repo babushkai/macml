@@ -716,13 +716,19 @@ struct ImageDropZone: View {
         guard let data = context.data else { return nil }
         let pixelData = data.bindMemory(to: UInt8.self, capacity: targetSize * targetSize)
 
-        // Calculate average to determine if inversion is needed
-        var sum = 0
-        for i in 0..<(targetSize * targetSize) {
-            sum += Int(pixelData[i])
+        // Calculate average from CENTER region (to ignore borders/axes in matplotlib plots)
+        // Use center 14x14 region (50% of image) - matches inference preprocessing
+        let centerSize = 14
+        let startOffset = (targetSize - centerSize) / 2  // Start at pixel 7
+        var centerSum = 0
+        for row in startOffset..<(startOffset + centerSize) {
+            for col in startOffset..<(startOffset + centerSize) {
+                let idx = row * targetSize + col
+                centerSum += Int(pixelData[idx])
+            }
         }
-        let avgPixel = sum / (targetSize * targetSize)
-        let shouldInvert = avgPixel > 127
+        let centerAvgPixel = centerSum / (centerSize * centerSize)
+        let shouldInvert = centerAvgPixel > 127
 
         // Create output image with inversion applied
         var outputPixels = [UInt8](repeating: 0, count: targetSize * targetSize)

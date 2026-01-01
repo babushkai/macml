@@ -219,17 +219,31 @@ actor MLXInferenceService {
         // Convert to grayscale float array
         let pixelData = getPixelData(from: resizedImage)
 
-        // Calculate average pixel value to determine if we need to invert
-        let avgPixel = pixelData.reduce(0) { $0 + Int($1) } / max(pixelData.count, 1)
-        debugLog("[Inference] Average pixel value (0-255): \(avgPixel)")
+        // Calculate average pixel value from CENTER region (to ignore borders/axes)
+        // Use center 14x14 region (50% of image) to determine inversion
+        let centerSize = 14
+        let startOffset = (targetSize - centerSize) / 2  // Start at pixel 7
+        var centerSum = 0
+        var centerCount = 0
+        for row in startOffset..<(startOffset + centerSize) {
+            for col in startOffset..<(startOffset + centerSize) {
+                let idx = row * targetSize + col
+                centerSum += Int(pixelData[idx])
+                centerCount += 1
+            }
+        }
+        let centerAvgPixel = centerSum / max(centerCount, 1)
+
+        // Also calculate overall average for logging
+        let overallAvgPixel = pixelData.reduce(0) { $0 + Int($1) } / max(pixelData.count, 1)
+        debugLog("[Inference] Overall average pixel (0-255): \(overallAvgPixel)")
+        debugLog("[Inference] Center region average pixel (0-255): \(centerAvgPixel)")
 
         // IMPORTANT: MNIST has white digits on black background (high values = digit)
-        // Most user images have black digits on white background (low values = digit)
-        // We need to INVERT the image so it matches MNIST format
-        // If average > 127, the background is likely white, so we invert
-        // If average <= 127, the background is likely dark, so we may not need to invert
-        let shouldInvert = avgPixel > 127
-        debugLog("[Inference] Should invert: \(shouldInvert) (avgPixel > 127)")
+        // Use CENTER average to decide inversion (avoids being fooled by borders)
+        // If center average > 127, the center background is likely white, so we invert
+        let shouldInvert = centerAvgPixel > 127
+        debugLog("[Inference] Should invert: \(shouldInvert) (centerAvgPixel > 127)")
 
         let mean: Float = 0.1307
         let std: Float = 0.3081
