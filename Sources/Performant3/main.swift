@@ -355,6 +355,34 @@ class AppState: ObservableObject {
         await saveData()
     }
 
+    /// Create a model from a template and select it for training
+    func createModelFromTemplate(_ template: ModelTemplate) async {
+        // Check if a model with this template ID already exists
+        if let existingModel = models.first(where: { $0.id == template.id }) {
+            // Select the existing model
+            selectedModelId = existingModel.id
+            return
+        }
+
+        // Create new model from template
+        let model = MLModel(
+            id: template.id,
+            name: template.name,
+            framework: .mlx,
+            status: .draft,
+            accuracy: 0,
+            fileSize: 0,
+            metadata: [
+                "description": template.description,
+                "architectureType": template.architectureType
+            ]
+        )
+
+        models.insert(model, at: 0)
+        selectedModelId = model.id
+        await saveData()
+    }
+
     func importModel(from url: URL, name: String, framework: MLFramework) async throws {
         isLoading = true
         loadingMessage = "Importing model..."

@@ -353,30 +353,25 @@ struct DashboardView: View {
     private var modelHubContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Popular Pre-trained Models")
+                Text("Model Architectures")
                     .font(.headline)
                     .foregroundColor(AppTheme.textPrimary)
 
                 Spacer()
 
-                Button(action: {}) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.right")
-                        Text("Browse HuggingFace")
-                    }
+                Text("Train with MLX on Apple Silicon")
                     .font(.caption)
-                    .foregroundColor(AppTheme.primary)
-                }
-                .buttonStyle(.plain)
+                    .foregroundColor(AppTheme.textMuted)
             }
 
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible()),
+                GridItem(.flexible()),
                 GridItem(.flexible())
             ], spacing: 12) {
-                ForEach(popularHFModels) { model in
-                    HFModelCard(model: model)
+                ForEach(modelTemplates) { template in
+                    ModelTemplateCard(template: template)
                 }
             }
         }
@@ -385,30 +380,32 @@ struct DashboardView: View {
     private var datasetHubContent: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Popular Datasets")
+                Text("Available Datasets")
                     .font(.headline)
                     .foregroundColor(AppTheme.textPrimary)
 
                 Spacer()
 
-                Button(action: {}) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.right")
-                        Text("Browse Datasets")
-                    }
+                Text("Built-in datasets ready to use")
                     .font(.caption)
-                    .foregroundColor(AppTheme.primary)
-                }
-                .buttonStyle(.plain)
+                    .foregroundColor(AppTheme.textMuted)
             }
 
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 12) {
-                ForEach(popularDatasets) { dataset in
-                    PopularDatasetCard(dataset: dataset)
+            if popularDatasets.isEmpty {
+                Text("No datasets available")
+                    .font(.subheadline)
+                    .foregroundColor(AppTheme.textMuted)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding()
+            } else {
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 12) {
+                    ForEach(popularDatasets) { dataset in
+                        BuiltInDatasetCard(dataset: dataset)
+                    }
                 }
             }
         }
@@ -867,6 +864,83 @@ struct HubTabButton: View {
     }
 }
 
+struct ModelTemplateCard: View {
+    let template: ModelTemplate
+    @EnvironmentObject var appState: AppState
+    @State private var isHovered = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(AppTheme.primary.opacity(0.15))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: template.icon)
+                        .font(.system(size: 14))
+                        .foregroundColor(AppTheme.primary)
+                }
+
+                Spacer()
+
+                Text(template.task)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundColor(AppTheme.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(AppTheme.secondary.opacity(0.15))
+                    .cornerRadius(4)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(template.name)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(AppTheme.textPrimary)
+                    .lineLimit(1)
+
+                Text(template.description)
+                    .font(.system(size: 10))
+                    .foregroundColor(AppTheme.textMuted)
+                    .lineLimit(2)
+                    .frame(height: 26, alignment: .top)
+            }
+
+            Button(action: {
+                // Create model from template and open training sheet
+                Task {
+                    await appState.createModelFromTemplate(template)
+                    appState.showNewRunSheet = true
+                }
+            }) {
+                HStack {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 10))
+                    Text("Train")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(AppTheme.primaryGradient)
+                .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(12)
+        .background(isHovered ? AppTheme.surfaceHover : AppTheme.surface)
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+        )
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
 struct HFModelCard: View {
     let model: HFModel
     @EnvironmentObject var appState: AppState
@@ -943,31 +1017,38 @@ struct HFModelCard: View {
     }
 }
 
-struct PopularDatasetCard: View {
+struct BuiltInDatasetCard: View {
     let dataset: PopularDataset
     @EnvironmentObject var appState: AppState
+    @State private var isHovered = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(AppTheme.warning.opacity(0.15))
+                        .fill(AppTheme.success.opacity(0.15))
                         .frame(width: 36, height: 36)
                     Image(systemName: dataset.icon)
                         .font(.system(size: 16))
-                        .foregroundColor(AppTheme.warning)
+                        .foregroundColor(AppTheme.success)
                 }
 
                 Spacer()
 
-                Text(dataset.task)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(AppTheme.success)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(AppTheme.success.opacity(0.15))
-                    .cornerRadius(4)
+                HStack(spacing: 4) {
+                    if dataset.isBuiltIn {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 8))
+                    }
+                    Text(dataset.isBuiltIn ? "Built-in" : dataset.task)
+                }
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(AppTheme.success)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(AppTheme.success.opacity(0.15))
+                .cornerRadius(4)
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -993,21 +1074,46 @@ struct PopularDatasetCard: View {
 
                 Spacer()
 
-                Button(action: { appState.showImportDatasetSheet = true }) {
-                    Text("Import")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(AppTheme.primary)
+                Button(action: {
+                    // Start training with this dataset
+                    appState.showNewRunSheet = true
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 9))
+                        Text("Train")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(AppTheme.successGradient)
+                    .cornerRadius(6)
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(14)
-        .background(AppTheme.surface)
+        .background(isHovered ? AppTheme.surfaceHover : AppTheme.surface)
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.white.opacity(0.05), lineWidth: 1)
         )
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
+struct PopularDatasetCard: View {
+    let dataset: PopularDataset
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        BuiltInDatasetCard(dataset: dataset)
     }
 }
 
