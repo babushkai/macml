@@ -739,17 +739,8 @@ struct ImageDropZone: View {
         rgbContext.translateBy(x: 0, y: CGFloat(targetSize))
         rgbContext.scaleBy(x: 1.0, y: -1.0)
         
-        // Ensure the image is in the correct color space
-        let targetColorSpace = CGColorSpaceCreateDeviceRGB()
-        let convertedImage: CGImage
-        if let imageColorSpace = cgImage.colorSpace,
-           imageColorSpace != targetColorSpace {
-            convertedImage = cgImage.converted(to: targetColorSpace, intent: .defaultIntent, options: nil) ?? cgImage
-        } else {
-            convertedImage = cgImage
-        }
-        
-        rgbContext.draw(convertedImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
+        // Draw the image - Core Graphics will handle color space conversion automatically
+        rgbContext.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
 
         // Step 2: Convert RGBA to grayscale using luminance formula (matches MLXInferenceService)
         var grayscalePixels = [UInt8](repeating: 0, count: targetSize * targetSize)

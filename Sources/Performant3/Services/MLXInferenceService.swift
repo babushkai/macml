@@ -274,16 +274,7 @@ actor MLXInferenceService {
     }
 
     private func resizeImage(_ image: CGImage, to size: CGSize) -> CGImage {
-        // Ensure the image is in the correct color space for drawing
         let targetColorSpace = CGColorSpaceCreateDeviceRGB()
-        let convertedImage: CGImage
-        if let imageColorSpace = image.colorSpace,
-           imageColorSpace != targetColorSpace {
-            // Convert to target color space if different
-            convertedImage = image.converted(to: targetColorSpace, intent: .defaultIntent, options: nil) ?? image
-        } else {
-            convertedImage = image
-        }
         
         guard let context = CGContext(
             data: nil,
@@ -309,8 +300,8 @@ actor MLXInferenceService {
         context.translateBy(x: 0, y: size.height)
         context.scaleBy(x: 1.0, y: -1.0)
 
-        // Draw the image
-        context.draw(convertedImage, in: CGRect(origin: .zero, size: size))
+        // Draw the image - Core Graphics will handle color space conversion automatically
+        context.draw(image, in: CGRect(origin: .zero, size: size))
 
         guard let resizedImage = context.makeImage() else {
             // Fallback: return original image if makeImage fails
