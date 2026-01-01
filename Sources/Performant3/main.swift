@@ -601,6 +601,17 @@ class AppState: ObservableObject {
         }
     }
 
+    /// Update a model's metadata (e.g., class labels)
+    func updateModel(_ model: MLModel) {
+        if let index = models.firstIndex(where: { $0.id == model.id }) {
+            models[index] = model
+            models[index].updatedAt = Date()
+            Task {
+                await saveData()
+            }
+        }
+    }
+
     // MARK: - Dataset Operations
 
     func addDataset(_ dataset: Dataset) async {

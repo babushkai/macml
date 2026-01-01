@@ -279,9 +279,11 @@ struct NoTrainedModelsView: View {
 // MARK: - Trained Model Card
 
 struct TrainedModelCard: View {
+    @EnvironmentObject var appState: AppState
     let model: MLModel
     let isSelected: Bool
     let onSelect: () -> Void
+    @State private var showingClassEditor = false
 
     var architectureType: String {
         model.metadata["architectureType"] ?? "MLP"
@@ -365,20 +367,33 @@ struct TrainedModelCard: View {
                 if isSelected && !classLabels.isEmpty {
                     Divider()
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Classes (\(numClasses))")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(.secondary)
+                        HStack {
+                            Text("Output Classes (\(numClasses))")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Button(action: { showingClassEditor = true }) {
+                                Label("Edit", systemImage: "pencil")
+                                    .font(.caption2)
+                            }
+                            .buttonStyle(.borderless)
+                        }
 
                         FlowLayout(spacing: 6) {
-                            ForEach(classLabels, id: \.self) { label in
-                                Text(label)
-                                    .font(.caption2)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.accentColor.opacity(0.15))
-                                    .foregroundColor(.accentColor)
-                                    .cornerRadius(6)
+                            ForEach(Array(classLabels.enumerated()), id: \.offset) { index, label in
+                                HStack(spacing: 4) {
+                                    Text("\(index):")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                    Text(label)
+                                        .font(.caption2)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.accentColor.opacity(0.15))
+                                .foregroundColor(.accentColor)
+                                .cornerRadius(6)
                             }
                         }
                     }
@@ -395,6 +410,84 @@ struct TrainedModelCard: View {
             )
         }
         .buttonStyle(.plain)
+        .sheet(isPresented: $showingClassEditor) {
+            ClassLabelEditorView(model: model, classLabels: classLabels)
+        }
+    }
+}
+
+// MARK: - Class Label Editor
+
+struct ClassLabelEditorView: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) var dismiss
+    let model: MLModel
+    let classLabels: [String]
+    @State private var editedLabels: [String] = []
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Edit Output Classes")
+                    .font(.headline)
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Save") { saveLabels() }
+                    .keyboardShortcut(.defaultAction)
+                    .buttonStyle(.borderedProminent)
+            }
+            .padding()
+
+            Divider()
+
+            // Class labels list
+            ScrollView {
+                VStack(spacing: 12) {
+                    ForEach(editedLabels.indices, id: \.self) { index in
+                        HStack {
+                            Text("Class \(index):")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .frame(width: 60, alignment: .trailing)
+
+                            TextField("Label", text: $editedLabels[index])
+                                .textFieldStyle(.roundedBorder)
+                        }
+                    }
+                }
+                .padding()
+            }
+
+            Divider()
+
+            // Info
+            HStack {
+                Image(systemName: "info.circle")
+                    .foregroundColor(.secondary)
+                Text("Class labels map model output indices to human-readable names")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            .padding()
+        }
+        .frame(width: 400, height: 400)
+        .onAppear {
+            editedLabels = classLabels
+        }
+    }
+
+    private func saveLabels() {
+        // Update model metadata with new labels
+        var updatedModel = model
+        if let labelsData = try? JSONEncoder().encode(editedLabels),
+           let labelsJson = String(data: labelsData, encoding: .utf8) {
+            updatedModel.metadata["classLabels"] = labelsJson
+            appState.updateModel(updatedModel)
+        }
+        dismiss()
     }
 }
 
@@ -463,13 +556,48 @@ struct ImageDropZone: View {
                 )
 
             if let image = selectedImage {
-                // Show selected image
+                // Show selected image and preprocessed preview side by side
                 VStack(spacing: 12) {
-                    Image(nsImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .cornerRadius(8)
-                        .frame(maxHeight: 200)
+                    HStack(spacing: 16) {
+                        // Original image
+                        VStack(spacing: 4) {
+                            Text("Original")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Image(nsImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .cornerRadius(8)
+                                .frame(maxHeight: 150)
+                        }
+
+                        Image(systemName: "arrow.right")
+                            .foregroundColor(.secondary)
+
+                        // Preprocessed preview (what model sees)
+                        VStack(spacing: 4) {
+                            Text("Model Input (28×28)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            if let preprocessed = generatePreprocessedImage(from: image) {
+                                Image(nsImage: preprocessed)
+                                    .resizable()
+                                    .interpolation(.none)  // Keep pixelated for clarity
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 112, height: 112)  // 4x scale for visibility
+                                    .cornerRadius(4)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .stroke(Color.orange, lineWidth: 1)
+                                    )
+                            } else {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.gray.opacity(0.2))
+                                    .frame(width: 112, height: 112)
+                                    .overlay(Text("Preview\nUnavailable").font(.caption2).foregroundColor(.secondary).multilineTextAlignment(.center))
+                            }
+                        }
+                    }
 
                     HStack {
                         if let url = selectedImageURL {
@@ -555,6 +683,71 @@ struct ImageDropZone: View {
             selectedImage = image
             selectedImageURL = url
         }
+    }
+
+    /// Generate a 28x28 preprocessed image preview matching what the model will see
+    private func generatePreprocessedImage(from nsImage: NSImage) -> NSImage? {
+        guard let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return nil
+        }
+
+        let targetSize = 28
+
+        // Create grayscale context for resizing
+        let colorSpace = CGColorSpaceCreateDeviceGray()
+        guard let context = CGContext(
+            data: nil,
+            width: targetSize,
+            height: targetSize,
+            bitsPerComponent: 8,
+            bytesPerRow: targetSize,
+            space: colorSpace,
+            bitmapInfo: 0
+        ) else {
+            return nil
+        }
+
+        context.interpolationQuality = .high
+        // Flip to match MNIST coordinate system
+        context.translateBy(x: 0, y: CGFloat(targetSize))
+        context.scaleBy(x: 1.0, y: -1.0)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
+
+        guard let data = context.data else { return nil }
+        let pixelData = data.bindMemory(to: UInt8.self, capacity: targetSize * targetSize)
+
+        // Calculate average to determine if inversion is needed
+        var sum = 0
+        for i in 0..<(targetSize * targetSize) {
+            sum += Int(pixelData[i])
+        }
+        let avgPixel = sum / (targetSize * targetSize)
+        let shouldInvert = avgPixel > 127
+
+        // Create output image with inversion applied
+        var outputPixels = [UInt8](repeating: 0, count: targetSize * targetSize)
+        for i in 0..<(targetSize * targetSize) {
+            if shouldInvert {
+                outputPixels[i] = 255 - pixelData[i]
+            } else {
+                outputPixels[i] = pixelData[i]
+            }
+        }
+
+        // Create NSImage from processed pixels
+        guard let outputContext = CGContext(
+            data: &outputPixels,
+            width: targetSize,
+            height: targetSize,
+            bitsPerComponent: 8,
+            bytesPerRow: targetSize,
+            space: colorSpace,
+            bitmapInfo: 0
+        ), let outputCGImage = outputContext.makeImage() else {
+            return nil
+        }
+
+        return NSImage(cgImage: outputCGImage, size: NSSize(width: targetSize, height: targetSize))
     }
 }
 

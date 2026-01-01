@@ -113,11 +113,8 @@ actor CheckpointManager {
         let loadedArrays = try MLX.loadArrays(url: checkpointPath)
 
         // Update model with loaded parameters
-        // Convert flat dictionary back to nested structure
-        var nestedParams = NestedDictionary<String, MLXArray>()
-        for (key, array) in loadedArrays {
-            nestedParams[key] = .value(array)
-        }
+        // Convert flat dictionary back to nested structure using MLX's unflattened
+        let nestedParams = NestedDictionary<String, MLXArray>.unflattened(loadedArrays)
         model.update(parameters: nestedParams)
     }
 

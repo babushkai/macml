@@ -2,6 +2,31 @@ import Foundation
 import MLX
 import MLXNN
 import AppKit
+import os.log
+
+private let inferenceLogger = Logger(subsystem: "com.performant3", category: "Inference")
+
+// Helper to log to both console and file
+private func debugLog(_ message: String) {
+    inferenceLogger.info("\(message)")
+    // Also write to file for easy access
+    let logFile = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("Performant3/inference_debug.log")
+    let timestamp = ISO8601DateFormatter().string(from: Date())
+    let logLine = "[\(timestamp)] \(message)\n"
+    if let data = logLine.data(using: .utf8) {
+        if FileManager.default.fileExists(atPath: logFile.path) {
+            if let handle = try? FileHandle(forWritingTo: logFile) {
+                handle.seekToEndOfFile()
+                handle.write(data)
+                handle.closeFile()
+            }
+        } else {
+            try? data.write(to: logFile)
+        }
+    }
+}
+
 
 // MARK: - MLX Inference Service
 
@@ -18,18 +43,40 @@ actor MLXInferenceService {
     func runInference(model: MLModel, imageURL: URL) async throws -> InferenceResult {
         let startTime = Date()
 
+        debugLog("[Inference] Starting inference for model: \(model.name)")
+        debugLog("[Inference] Model ID: \(model.id)")
+        debugLog("[Inference] Model file path: \(model.filePath ?? "nil")")
+        debugLog("[Inference] Model metadata: \(model.metadata)")
+
         // Load the model if not already loaded
         let mlxModel = try await loadModel(model)
+        debugLog("[Inference] Model loaded: \(type(of: mlxModel))")
 
         // Get class labels for this model
         let classLabels = getClassLabels(for: model)
+        debugLog("[Inference] Class labels: \(classLabels)")
 
         // Load and preprocess the image
         let inputArray = try preprocessImage(at: imageURL, for: model)
+        debugLog("[Inference] Input array shape: \(inputArray.shape)")
 
         // Run forward pass
         let logits = forwardPass(model: mlxModel, inputs: inputArray, training: false)
         eval(logits)
+        debugLog("[Inference] Logits shape: \(logits.shape)")
+
+        // Debug: Print raw logits values
+        let logitsFlat = logits.reshaped([-1])
+        var logitsValues: [Float] = []
+        for i in 0..<min(10, logitsFlat.dim(0)) {
+            logitsValues.append(logitsFlat[i].item(Float.self))
+        }
+        debugLog("[Inference] Raw logits: \(logitsValues.map { String(format: "%.3f", $0) }.joined(separator: ", "))")
+
+        // Debug: Check if all logits are similar (indicates model not learning/wrong weights)
+        let logitsMax = logitsValues.max() ?? 0
+        let logitsMin = logitsValues.min() ?? 0
+        debugLog("[Inference] Logits range: [\(String(format: "%.3f", logitsMin)), \(String(format: "%.3f", logitsMax))], spread: \(String(format: "%.3f", logitsMax - logitsMin))")
 
         // Get predictions with real class labels
         let predictions = extractPredictions(from: logits, classLabels: classLabels)
@@ -87,12 +134,31 @@ actor MLXInferenceService {
         let checkpointURL = URL(fileURLWithPath: filePath)
         let loadedArrays = try MLX.loadArrays(url: checkpointURL)
 
-        // Update model parameters
-        var nestedParams = NestedDictionary<String, MLXArray>()
+        // Update model parameters - need to unflatten dot-separated keys
+        // When saving, flattened() creates keys like "layers.0.weight"
+        // We need to parse these back into nested structure for update()
+        var flatParams: [String: MLXArray] = [:]
         for (key, array) in loadedArrays {
-            nestedParams[key] = .value(array)
+            flatParams[key] = array
         }
+
+        // Debug: Print loaded parameter keys and shapes
+        debugLog("[Inference] Loaded \(loadedArrays.count) parameter arrays:")
+        for (key, array) in loadedArrays.sorted(by: { $0.key < $1.key }).prefix(5) {
+            debugLog("[Inference]   \(key): shape \(array.shape)")
+        }
+        if loadedArrays.count > 5 {
+            debugLog("[Inference]   ... and \(loadedArrays.count - 5) more")
+        }
+
+        // Use MLX's unflattened to convert flat dict to nested structure
+        let nestedParams = NestedDictionary<String, MLXArray>.unflattened(flatParams)
         mlxModel.update(parameters: nestedParams)
+
+        // Debug: Verify model parameters were updated
+        let modelParams = mlxModel.parameters()
+        let verifyParams = modelParams.flattened()
+        debugLog("[Inference] Model now has \(verifyParams.count) parameter tensors after update")
 
         // Cache the model
         loadedModels[model.id] = mlxModel
@@ -131,18 +197,21 @@ actor MLXInferenceService {
             throw MLXInferenceError.imageLoadFailed
         }
 
+        debugLog("[Inference] Original image size: \(cgImage.width)x\(cgImage.height)")
+
         // Determine target size based on architecture
         let archType = model.metadata["architectureType"] ?? "MLP"
+        debugLog("[Inference] Architecture type: \(archType)")
         let targetSize: Int
         switch archType {
         case "CNN":
-            targetSize = 28 // CNN default for MNIST-style
+            targetSize = 28
         case "ResNet":
-            targetSize = 28 // ResNet for MNIST
+            targetSize = 28
         case "Transformer":
-            targetSize = 28 // Transformer input
+            targetSize = 28
         default:
-            targetSize = 28 // MLP default
+            targetSize = 28
         }
 
         let resizedImage = resizeImage(cgImage, to: CGSize(width: targetSize, height: targetSize))
@@ -150,19 +219,43 @@ actor MLXInferenceService {
         // Convert to grayscale float array
         let pixelData = getPixelData(from: resizedImage)
 
+        // Calculate average pixel value to determine if we need to invert
+        let avgPixel = pixelData.reduce(0) { $0 + Int($1) } / max(pixelData.count, 1)
+        debugLog("[Inference] Average pixel value (0-255): \(avgPixel)")
+
         // IMPORTANT: MNIST has white digits on black background (high values = digit)
         // Most user images have black digits on white background (low values = digit)
         // We need to INVERT the image so it matches MNIST format
-        // Then apply the same normalization as training (mean=0.1307, std=0.3081)
+        // If average > 127, the background is likely white, so we invert
+        // If average <= 127, the background is likely dark, so we may not need to invert
+        let shouldInvert = avgPixel > 127
+        debugLog("[Inference] Should invert: \(shouldInvert) (avgPixel > 127)")
+
         let mean: Float = 0.1307
         let std: Float = 0.3081
         let normalizedData = pixelData.map { pixel -> Float in
-            let inverted = 1.0 - (Float(pixel) / 255.0)  // Invert for MNIST format
-            return (inverted - mean) / std  // Same normalization as training
+            var value = Float(pixel) / 255.0
+            if shouldInvert {
+                value = 1.0 - value  // Invert for MNIST format
+            }
+            return (value - mean) / std  // Same normalization as training
         }
 
+        // Debug: Print min/max of normalized values
+        let minVal = normalizedData.min() ?? 0
+        let maxVal = normalizedData.max() ?? 0
+        debugLog("[Inference] Normalized range: [\(minVal), \(maxVal)]")
+
+        // Debug: Print a sample of the normalized values (center of image)
+        let centerStart = (14 * 28 + 10)  // Row 14, starting at column 10
+        let centerValues = Array(normalizedData[centerStart..<min(centerStart+8, normalizedData.count)])
+        debugLog("[Inference] Center row sample (normalized): \(centerValues.map { String(format: "%.2f", $0) }.joined(separator: ", "))")
+
+        // Debug: Check non-zero pixels (after normalization, background ~= -0.42, digit ~= 2.82)
+        let significantPixels = normalizedData.filter { $0 > 0.5 }.count
+        debugLog("[Inference] Pixels with value > 0.5 (likely digit): \(significantPixels) / \(normalizedData.count)")
+
         // Create MLXArray with shape [batch, height, width, channels] to match training
-        // The models will flatten internally if needed
         return MLXArray(normalizedData).reshaped([1, targetSize, targetSize, 1])
     }
 
@@ -178,6 +271,12 @@ actor MLXInferenceService {
         )!
 
         context.interpolationQuality = .high
+
+        // Flip the context to match MNIST coordinate system (origin at top-left)
+        // CGContext has origin at bottom-left by default, which would flip the image
+        context.translateBy(x: 0, y: size.height)
+        context.scaleBy(x: 1.0, y: -1.0)
+
         context.draw(image, in: CGRect(origin: .zero, size: size))
 
         return context.makeImage()!
