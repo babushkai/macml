@@ -714,12 +714,9 @@ struct ImageDropZone: View {
 
         let targetSize = 28
 
-        // Step 1: Resize image in RGB color space first (matches MLXInferenceService)
-        // Drawing RGB to grayscale context directly can produce incorrect results for colored images
-        // Use pre-allocated buffer to access pixel data
-        var rgbPixelData = [UInt8](repeating: 0, count: targetSize * targetSize * 4)
-        guard let rgbContext = CGContext(
-            data: &rgbPixelData,
+        // Step 1: Resize image with flip (matches MLXInferenceService.resizeImage)
+        guard let resizeContext = CGContext(
+            data: nil,  // Let CGContext manage memory
             width: targetSize,
             height: targetSize,
             bitsPerComponent: 8,
@@ -730,19 +727,32 @@ struct ImageDropZone: View {
             return nil
         }
 
-        // Clear the context with black background
-        rgbContext.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1))
-        rgbContext.fill(CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
-
-        rgbContext.interpolationQuality = .high
+        resizeContext.interpolationQuality = .high
         // Flip to match MNIST coordinate system
-        rgbContext.translateBy(x: 0, y: CGFloat(targetSize))
-        rgbContext.scaleBy(x: 1.0, y: -1.0)
-        
-        // Draw the image - Core Graphics will handle color space conversion automatically
-        rgbContext.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
+        resizeContext.translateBy(x: 0, y: CGFloat(targetSize))
+        resizeContext.scaleBy(x: 1.0, y: -1.0)
+        resizeContext.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
 
-        // Step 2: Convert RGBA to grayscale using luminance formula (matches MLXInferenceService)
+        guard let resizedImage = resizeContext.makeImage() else {
+            return nil
+        }
+
+        // Step 2: Extract pixel data from resized image (matches MLXInferenceService.getPixelData)
+        var rgbPixelData = [UInt8](repeating: 0, count: targetSize * targetSize * 4)
+        guard let extractContext = CGContext(
+            data: &rgbPixelData,
+            width: targetSize,
+            height: targetSize,
+            bitsPerComponent: 8,
+            bytesPerRow: targetSize * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            return nil
+        }
+        extractContext.draw(resizedImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
+
+        // Step 3: Convert RGBA to grayscale using luminance formula (matches MLXInferenceService)
         var grayscalePixels = [UInt8](repeating: 0, count: targetSize * targetSize)
         for i in 0..<(targetSize * targetSize) {
             let r = Float(rgbPixelData[i * 4])
@@ -751,7 +761,7 @@ struct ImageDropZone: View {
             grayscalePixels[i] = UInt8(0.299 * r + 0.587 * g + 0.114 * b)
         }
 
-        // Step 3: Calculate average from CENTER region (to ignore borders/axes in matplotlib plots)
+        // Step 4: Calculate average from CENTER region (to ignore borders/axes in matplotlib plots)
         // Use center 14x14 region (50% of image) - matches inference preprocessing
         let centerSize = 14
         let startOffset = (targetSize - centerSize) / 2  // Start at pixel 7
@@ -765,7 +775,7 @@ struct ImageDropZone: View {
         let centerAvgPixel = centerSum / (centerSize * centerSize)
         let shouldInvert = centerAvgPixel > 127
 
-        // Step 4: Apply inversion if needed
+        // Step 5: Apply inversion if needed
         var outputPixels = [UInt8](repeating: 0, count: targetSize * targetSize)
         for i in 0..<(targetSize * targetSize) {
             if shouldInvert {
@@ -775,7 +785,7 @@ struct ImageDropZone: View {
             }
         }
 
-        // Step 5: Create NSImage from processed pixels
+        // Step 6: Create NSImage from processed pixels
         let grayColorSpace = CGColorSpaceCreateDeviceGray()
         guard let outputContext = CGContext(
             data: &outputPixels,
