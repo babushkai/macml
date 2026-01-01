@@ -714,30 +714,39 @@ struct ImageDropZone: View {
 
         let targetSize = 28
 
-        // Create grayscale context for resizing
-        let colorSpace = CGColorSpaceCreateDeviceGray()
-        guard let context = CGContext(
+        // Step 1: Resize image in RGB color space first (matches MLXInferenceService)
+        // Drawing RGB to grayscale context directly can produce incorrect results for colored images
+        guard let rgbContext = CGContext(
             data: nil,
             width: targetSize,
             height: targetSize,
             bitsPerComponent: 8,
-            bytesPerRow: targetSize,
-            space: colorSpace,
-            bitmapInfo: 0
+            bytesPerRow: targetSize * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else {
             return nil
         }
 
-        context.interpolationQuality = .high
+        rgbContext.interpolationQuality = .high
         // Flip to match MNIST coordinate system
-        context.translateBy(x: 0, y: CGFloat(targetSize))
-        context.scaleBy(x: 1.0, y: -1.0)
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
+        rgbContext.translateBy(x: 0, y: CGFloat(targetSize))
+        rgbContext.scaleBy(x: 1.0, y: -1.0)
+        rgbContext.draw(cgImage, in: CGRect(x: 0, y: 0, width: targetSize, height: targetSize))
 
-        guard let data = context.data else { return nil }
-        let pixelData = data.bindMemory(to: UInt8.self, capacity: targetSize * targetSize)
+        guard let rgbData = rgbContext.data else { return nil }
+        let rgbPixelData = rgbData.bindMemory(to: UInt8.self, capacity: targetSize * targetSize * 4)
 
-        // Calculate average from CENTER region (to ignore borders/axes in matplotlib plots)
+        // Step 2: Convert RGBA to grayscale using luminance formula (matches MLXInferenceService)
+        var grayscalePixels = [UInt8](repeating: 0, count: targetSize * targetSize)
+        for i in 0..<(targetSize * targetSize) {
+            let r = Float(rgbPixelData[i * 4])
+            let g = Float(rgbPixelData[i * 4 + 1])
+            let b = Float(rgbPixelData[i * 4 + 2])
+            grayscalePixels[i] = UInt8(0.299 * r + 0.587 * g + 0.114 * b)
+        }
+
+        // Step 3: Calculate average from CENTER region (to ignore borders/axes in matplotlib plots)
         // Use center 14x14 region (50% of image) - matches inference preprocessing
         let centerSize = 14
         let startOffset = (targetSize - centerSize) / 2  // Start at pixel 7
@@ -745,30 +754,31 @@ struct ImageDropZone: View {
         for row in startOffset..<(startOffset + centerSize) {
             for col in startOffset..<(startOffset + centerSize) {
                 let idx = row * targetSize + col
-                centerSum += Int(pixelData[idx])
+                centerSum += Int(grayscalePixels[idx])
             }
         }
         let centerAvgPixel = centerSum / (centerSize * centerSize)
         let shouldInvert = centerAvgPixel > 127
 
-        // Create output image with inversion applied
+        // Step 4: Apply inversion if needed
         var outputPixels = [UInt8](repeating: 0, count: targetSize * targetSize)
         for i in 0..<(targetSize * targetSize) {
             if shouldInvert {
-                outputPixels[i] = 255 - pixelData[i]
+                outputPixels[i] = 255 - grayscalePixels[i]
             } else {
-                outputPixels[i] = pixelData[i]
+                outputPixels[i] = grayscalePixels[i]
             }
         }
 
-        // Create NSImage from processed pixels
+        // Step 5: Create NSImage from processed pixels
+        let grayColorSpace = CGColorSpaceCreateDeviceGray()
         guard let outputContext = CGContext(
             data: &outputPixels,
             width: targetSize,
             height: targetSize,
             bitsPerComponent: 8,
             bytesPerRow: targetSize,
-            space: colorSpace,
+            space: grayColorSpace,
             bitmapInfo: 0
         ), let outputCGImage = outputContext.makeImage() else {
             return nil
