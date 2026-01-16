@@ -584,39 +584,49 @@ struct DashboardView: View {
             ModernSectionHeader(title: "Training Analytics", icon: "chart.bar.fill", iconColor: AppTheme.primary)
 
             HStack(spacing: 16) {
-                // Key Metrics
-                VStack(spacing: 12) {
+                AnalyticsGaugeCard(
+                    title: "Avg Accuracy",
+                    value: averageAccuracy ?? 0,
+                    maxValue: 1.0,
+                    color: AppTheme.success
+                )
+
+                if let best = bestModel {
                     AnalyticsGaugeCard(
-                        title: "Avg Accuracy",
-                        value: averageAccuracy ?? 0,
+                        title: "Best Model",
+                        value: best.accuracy,
                         maxValue: 1.0,
-                        color: AppTheme.success
+                        color: AppTheme.warning,
+                        subtitle: best.run.name
                     )
-
-                    if let best = bestModel {
-                        AnalyticsGaugeCard(
-                            title: "Best Model",
-                            value: best.accuracy,
-                            maxValue: 1.0,
-                            color: AppTheme.warning,
-                            subtitle: best.run.name
-                        )
-                    }
                 }
-                .frame(width: 200)
 
-                // Chart
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Accuracy Trend")
-                        .font(.headline)
-                        .foregroundColor(AppTheme.textPrimary)
+                AnalyticsGaugeCard(
+                    title: "Total Runs",
+                    value: Double(completedRuns.count) / max(Double(completedRuns.count), 10.0),
+                    maxValue: 1.0,
+                    color: AppTheme.primary,
+                    subtitle: "\(completedRuns.count) completed"
+                )
 
-                    ModernAccuracyChart(runs: completedRuns)
-                }
-                .padding()
-                .background(AppTheme.surface)
-                .cornerRadius(12)
+                AnalyticsGaugeCard(
+                    title: "Training Time",
+                    value: min(totalTrainingTime / 3600, 1.0),
+                    maxValue: 1.0,
+                    color: AppTheme.secondary,
+                    subtitle: formatTrainingTime(totalTrainingTime)
+                )
             }
+        }
+    }
+
+    private func formatTrainingTime(_ seconds: TimeInterval) -> String {
+        if seconds < 60 {
+            return "\(Int(seconds))s"
+        } else if seconds < 3600 {
+            return "\(Int(seconds / 60))m"
+        } else {
+            return String(format: "%.1fh", seconds / 3600)
         }
     }
 
@@ -1252,61 +1262,6 @@ struct AnalyticsGaugeCard: View {
     }
 }
 
-struct ModernAccuracyChart: View {
-    let runs: [TrainingRun]
-
-    var chartData: [(name: String, accuracy: Double, index: Int)] {
-        runs.suffix(8).enumerated().compactMap { index, run in
-            guard let acc = run.accuracy else { return nil }
-            return (run.name, acc * 100, index)
-        }
-    }
-
-    var body: some View {
-        if chartData.count > 1 {
-            Chart(chartData, id: \.index) { item in
-                BarMark(
-                    x: .value("Run", item.index),
-                    y: .value("Accuracy", item.accuracy)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [AppTheme.primary, AppTheme.secondary],
-                        startPoint: .bottom,
-                        endPoint: .top
-                    )
-                )
-                .cornerRadius(4)
-            }
-            .chartYScale(domain: 0...100)
-            .chartXAxis(.hidden)
-            .chartYAxis {
-                AxisMarks(position: .leading, values: [0, 50, 100]) { value in
-                    AxisValueLabel {
-                        Text("\(value.as(Int.self) ?? 0)%")
-                            .font(.system(size: 10))
-                            .foregroundColor(AppTheme.textMuted)
-                    }
-                    AxisGridLine()
-                        .foregroundStyle(Color.white.opacity(0.1))
-                }
-            }
-            .frame(height: 140)
-        } else {
-            VStack(spacing: 8) {
-                Image(systemName: "chart.bar.xaxis")
-                    .font(.system(size: 32))
-                    .foregroundColor(AppTheme.textMuted)
-                Text("Complete more runs to see trends")
-                    .font(.system(size: 12))
-                    .foregroundColor(AppTheme.textMuted)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 140)
-        }
-    }
-}
-
 // MARK: - Legacy Support Components (using existing definitions from ContentView)
 
 // Keep existing helper views for compatibility
@@ -1401,7 +1356,7 @@ struct AccuracyTrendChart: View {
     let bestAccuracy: Double?
 
     var body: some View {
-        ModernAccuracyChart(runs: completedRuns)
+        EmptyView()
     }
 }
 
