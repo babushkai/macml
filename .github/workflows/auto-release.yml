@@ -309,7 +309,11 @@ jobs:
           ditto -c -k --keepParent "${APP_NAME}.app" "$ZIP_NAME"
           echo "zip_path=$ZIP_NAME" >> $GITHUB_ENV
 
-      - name: Generate changelog
+      - name: Install git-cliff
+        run: |
+          brew install git-cliff
+
+      - name: Generate changelog with git-cliff
         env:
           VERSION: ${{ steps.version.outputs.version }}
           PR_TITLE: ${{ github.event.pull_request.title }}
@@ -319,25 +323,35 @@ jobs:
         run: |
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
+          # Generate categorized changelog using git-cliff
+          if [ -n "$PREV_TAG" ]; then
+            git-cliff ${PREV_TAG}..HEAD --tag "v${VERSION}" -o changelog_section.md
+          else
+            git-cliff --tag "v${VERSION}" -o changelog_section.md
+          fi
+
+          # Create release notes with header
           cat << EOF > release_notes.md
           ## MacML v${VERSION}
 
-          ### What's Changed
+          ### What's Changed in This Release
 
           * ${PR_TITLE} by @${PR_AUTHOR} in ${PR_URL}
 
           EOF
 
-          if [ -n "$PREV_TAG" ]; then
-            echo "### All Changes" >> release_notes.md
-            echo "" >> release_notes.md
-            git log ${PREV_TAG}..HEAD^ --pretty=format:"* %s (%h)" --no-merges | head -20 >> release_notes.md
-            echo "" >> release_notes.md
+          # Add categorized changelog (skip the header from git-cliff)
+          if [ -f changelog_section.md ]; then
+            # Extract just the version section, skip the main header
+            sed -n '/^## \[/,/^## \[/p' changelog_section.md | head -n -1 >> release_notes.md 2>/dev/null || \
+            cat changelog_section.md >> release_notes.md
           fi
 
           cat << EOF >> release_notes.md
 
-          ### Installation
+          ---
+
+          ### 📦 Installation
 
           1. Download \`${APP_NAME}-${VERSION}.dmg\`
           2. Open the DMG file
@@ -345,12 +359,12 @@ jobs:
 
           > **Note:** On first launch, right-click and select "Open" if you see a Gatekeeper warning.
 
-          ### System Requirements
+          ### 💻 System Requirements
 
           - macOS 14.0 (Sonoma) or later
           - Apple Silicon Mac (M1/M2/M3/M4)
 
-          ### Checksums
+          ### 🔐 Checksums
 
           \`\`\`
           SHA256 (DMG): $(shasum -a 256 "${APP_NAME}-${VERSION}.dmg" | awk '{print $1}')
@@ -358,8 +372,24 @@ jobs:
           \`\`\`
 
           ---
+
           **Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-initial}...v${VERSION}
+
+          ---
+          _Release generated with ❤️ by MacML CI_
           EOF
+
+      - name: Update CHANGELOG.md
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Generate full changelog
+          git-cliff --tag "v${VERSION}" -o CHANGELOG.md
+
+          # Commit changelog update
+          git add CHANGELOG.md
+          git commit -m "docs: update CHANGELOG.md for v${VERSION} [skip ci]" || echo "No changelog changes to commit"
+          git push || echo "Nothing to push"
 
       - name: Create tag and release
         env:

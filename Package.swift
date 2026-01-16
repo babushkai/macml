@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "MacML",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14)
     ],
@@ -33,7 +34,9 @@ let package = Package(
             ],
             path: "Sources/MacML",
             resources: [
-                .copy("../../Resources/Scripts")
+                .copy("../../Resources/Scripts"),
+                .process("Resources/en.lproj"),
+                .process("Resources/ja.lproj")
             ],
             swiftSettings: [
                 .unsafeFlags(["-parse-as-library"])

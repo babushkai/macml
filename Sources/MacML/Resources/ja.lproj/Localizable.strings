@@ -1,0 +1,264 @@
+/* Navigation & Tabs */
+"dashboard" = "ダッシュボード";
+"models" = "モデル";
+"training" = "学習";
+"experiments" = "実験";
+"metrics" = "指標";
+"datasets" = "データセット";
+"inference" = "推論";
+"settings" = "設定";
+
+/* Common Actions */
+"new_model" = "新規モデル";
+"new_training_run" = "新規学習実行";
+"import_dataset" = "データセットを読み込む";
+"import_model" = "モデルを読み込む";
+"create_model" = "モデルを作成";
+"train_model" = "モデルを学習";
+"train" = "学習";
+"run_inference" = "推論を実行";
+"export" = "書き出す";
+"delete" = "削除";
+"cancel" = "キャンセル";
+"ok" = "OK";
+"save" = "保存";
+"create" = "作成";
+"refresh" = "更新";
+"clear" = "クリア";
+"close" = "閉じる";
+"browse" = "選択...";
+
+/* Training Actions */
+"pause" = "一時停止";
+"resume" = "再開";
+"stop" = "停止";
+"pause_training" = "学習を一時停止";
+"resume_training" = "学習を再開";
+"stop_training" = "学習を停止";
+"continue_training" = "学習を続行";
+"start_training" = "学習を開始";
+
+/* Menu Items */
+"toggle_sidebar" = "サイドバーを切り替え";
+"refresh_data" = "データを更新";
+"delete_all_failed_runs" = "失敗した実行をすべて削除";
+"training_runs" = "学習実行";
+
+/* Status Labels */
+"status_active" = "アクティブ";
+"status_completed" = "完了";
+"status_failed" = "失敗";
+"status_cancelled" = "キャンセル済み";
+"status_paused" = "一時停止中";
+"status_running" = "実行中";
+"status_queued" = "待機中";
+"status_draft" = "下書き";
+"status_ready" = "準備完了";
+"status_importing" = "読み込み中";
+"status_deployed" = "デプロイ済み";
+"status_archived" = "アーカイブ済み";
+"status_deprecated" = "非推奨";
+
+/* Dashboard */
+"mlops_command_center" = "MLOps コマンドセンター";
+"train_deploy_monitor" = "機械学習モデルの学習、デプロイ、監視";
+"model_architectures" = "モデルアーキテクチャ";
+"train_with_mlx" = "Apple Silicon上でMLXを使用して学習";
+"available_datasets" = "利用可能なデータセット";
+"built_in_datasets" = "すぐに使える組み込みデータセット";
+"quick_actions" = "クイックアクション";
+"recent_activity" = "最近のアクティビティ";
+"training_analytics" = "学習分析";
+"accuracy_trend" = "精度の推移";
+"model_hub" = "モデルハブ";
+"dataset_hub" = "データセットハブ";
+"live_metrics" = "リアルタイム指標";
+"active_training" = "実行中の学習";
+"uptime" = "稼働時間";
+"throughput" = "スループット";
+"jobs_queue" = "ジョブキュー";
+"success_rate" = "成功率";
+"storage" = "ストレージ";
+"avg_accuracy" = "平均精度";
+"best_model" = "最高モデル";
+"welcome_to_macml" = "MacMLへようこそ";
+"mlops_description" = "Apple Siliconで動作するエンドツーエンドのMLOpsプラットフォーム";
+"load_demo_data" = "デモデータを読み込む";
+"complete_trends_message" = "トレンドを表示するには、より多くの実行を完了してください";
+"import_or_create" = "読み込みまたは作成";
+"train_a_model" = "モデルを学習する";
+"add_training_data" = "学習データを追加";
+"test_your_model" = "モデルをテスト";
+"training_completed" = "学習が完了しました";
+"no_data_available" = "利用可能なデータセットがありません";
+
+/* Models View */
+"all_models" = "すべてのモデル";
+"no_models_yet" = "モデルがありません";
+"no_matching_models" = "一致するモデルがありません";
+"no_models" = "モデルなし";
+"search_models" = "モデルを検索...";
+"all_frameworks" = "すべてのフレームワーク";
+"all_status" = "すべてのステータス";
+"select_multiple" = "複数選択";
+"cancel_selection" = "選択をキャンセル";
+"show_archived" = "アーカイブを表示";
+"delete_all_models" = "すべてのモデルを削除";
+"clear_filters" = "フィルターをクリア";
+"adjust_filters" = "検索条件やフィルターを調整してください";
+"import_model_to_start" = "モデルを読み込むか作成して学習を開始";
+"total" = "合計";
+"copy_model_id" = "モデルIDをコピー";
+"archive" = "アーカイブ";
+"restore" = "復元";
+"mark_deprecated" = "非推奨にする";
+"undeprecate" = "非推奨を解除";
+"drop_to_import" = "ドロップして読み込む";
+"drag_drop_model" = "ここにモデルをドラッグ＆ドロップ";
+"supported_formats" = ".mlmodel, .mlmodelc, .mlpackage, .safetensorsファイルをサポート";
+"loading_model_info" = "モデル情報を読み込み中...";
+"metadata" = "メタデータ";
+"created" = "作成日";
+"updated" = "更新日";
+"author" = "作成者";
+"version" = "バージョン";
+"inputs" = "入力";
+"outputs" = "出力";
+"description" = "説明";
+
+/* Training Runs View */
+"no_training_runs_yet" = "学習実行がありません";
+"copy_run_id" = "実行IDをコピー";
+"delete_run" = "実行を削除";
+"epoch" = "エポック";
+"loss" = "損失";
+"accuracy" = "精度";
+"learning_rate" = "学習率";
+
+/* Datasets View */
+"no_datasets_yet" = "データセットがありません";
+"search_datasets" = "データセットを検索...";
+"all_types" = "すべてのタイプ";
+"files" = "ファイル";
+"classes" = "クラス";
+"samples" = "サンプル";
+"size" = "サイズ";
+"duration" = "所要時間";
+"create_dataset" = "データセットを作成";
+"copy_dataset_id" = "データセットIDをコピー";
+"show_in_finder" = "Finderで表示";
+
+/* Inference View */
+"select_model" = "モデルを選択";
+"select_model_for_inference" = "推論を実行するモデルを選択";
+"drop_images" = "ここに画像をドロップ、またはクリックして選択";
+"batch_mode" = "バッチモード";
+"batch_inference" = "バッチ推論結果";
+"inference_complete" = "推論が完了しました";
+"no_models_available" = "利用可能なモデルがありません";
+"export_csv" = "CSVで書き出す";
+"export_json" = "JSONで書き出す";
+
+/* Settings View */
+"general" = "一般";
+"training_defaults" = "学習のデフォルト値";
+"ml_training_backend" = "ML学習バックエンド";
+"auto_save_checkpoints" = "学習チェックポイントを自動保存";
+"show_notifications" = "完了した実行の通知を表示";
+"cache_models" = "高速推論のためにモデルをメモリに保持";
+"default_epochs" = "デフォルトのエポック数";
+"default_batch_size" = "デフォルトのバッチサイズ";
+"default_learning_rate" = "デフォルトの学習率";
+"mlx_backend" = "MLXバックエンド";
+"apple_silicon_optimized" = "Apple Silicon最適化";
+"gpu_acceleration" = "GPUアクセラレーション";
+"metal" = "Metal";
+"automatic_differentiation" = "自動微分";
+"enabled" = "有効";
+"mlx_description" = "学習にはAppleのMLXフレームワークとネイティブMetal GPUアクセラレーションを使用します。すべての勾配は自動微分で計算されます。";
+"total_size" = "合計サイズ";
+"cache" = "キャッシュ";
+"loading_storage_info" = "ストレージ情報を読み込み中...";
+"open_data_folder" = "データフォルダを開く";
+"clear_cache" = "キャッシュをクリア";
+"cache_empty" = "キャッシュは空です";
+"about" = "このアプリについて";
+"build" = "ビルド";
+"demo_sample_data" = "デモ＆サンプルデータ";
+"load_demo_data_description" = "アプリの機能を試すためのサンプルモデル、データセット、学習実行、推論結果を読み込みます。";
+"danger_zone" = "危険な操作";
+"reset_settings" = "設定をデフォルトにリセット";
+"clear_all_data" = "すべてのデータを消去";
+"cannot_be_undone" = "これらの操作は元に戻せません。";
+"configure_preferences" = "学習のデフォルト値と設定を構成";
+
+/* Alerts & Confirmations */
+"error" = "エラー";
+"delete_model" = "モデルを削除";
+"delete_models" = "モデルを削除";
+"delete_dataset" = "データセットを削除";
+
+/* Loading Messages */
+"loading_data" = "データを読み込み中...";
+"importing_model" = "モデルを読み込み中...";
+"importing_dataset" = "データセットを読み込み中...";
+"exporting_model" = "モデルを書き出し中...";
+"running_inference" = "推論を実行中...";
+
+/* Success Messages */
+"model_created" = "モデルを作成しました";
+"model_deleted" = "モデルを削除しました";
+"dataset_created" = "データセットを作成しました";
+"dataset_deleted" = "データセットを削除しました";
+"training_started" = "学習を開始しました";
+"training_paused" = "学習を一時停止しました";
+"training_resumed" = "学習を再開しました";
+"training_cancelled" = "学習をキャンセルしました";
+"run_deleted" = "実行を削除しました";
+"cache_cleared" = "キャッシュをクリアしました";
+"all_data_cleared" = "すべてのデータを消去しました";
+"settings_reset" = "設定をデフォルトにリセットしました";
+"dataset_imported" = "データセットを読み込みました";
+
+/* Validation Messages */
+"lr_must_be_positive" = "学習率は正の数である必要があります";
+"lr_too_high" = "学習率は1.0を超えないようにしてください";
+"lr_very_low" = "学習率が非常に低いです (< 0.00001)";
+"lr_quite_high" = "学習率がかなり高いです (> 0.1)";
+
+/* Sheets */
+"run_name" = "実行名";
+"model" = "モデル";
+"dataset" = "データセット";
+"optional" = "オプション";
+"epochs" = "エポック";
+"batch_size" = "バッチサイズ";
+"validation_split" = "検証分割";
+"data_augmentation" = "データ拡張";
+"data_type" = "データ型";
+"architecture" = "アーキテクチャ";
+"experiment" = "実験";
+"dataset_name" = "データセット名";
+"dataset_type" = "データセットタイプ";
+"model_name" = "モデル名";
+"model_description" = "モデルの説明";
+"framework" = "フレームワーク";
+"class_labels" = "クラスラベル";
+"input_shape" = "入力形状";
+"choose_model_file" = "モデルファイルを選択";
+"drop_folder" = "データセットを読み込むフォルダをドロップ";
+
+/* Confirmation Messages with arguments */
+"confirm_delete_model %@" = "「%@」を削除してもよろしいですか？関連する学習実行も削除されます。";
+"confirm_delete_models %lld" = "%lld個のモデルを削除してもよろしいですか？関連する学習実行も削除されます。この操作は元に戻せません。";
+"confirm_stop_training" = "この学習実行を停止してもよろしいですか？進行状況は失われます。";
+"confirm_clear_cache" = "一時ファイルを含むすべてのキャッシュデータが削除されます。モデルとデータセットは影響を受けません。";
+"confirm_reset_settings" = "すべての設定がデフォルト値にリセットされます。";
+"confirm_clear_all_data" = "すべてのモデル、データセット、学習実行、設定が完全に削除されます。この操作は元に戻せません。";
+"n_active %lld" = "%lld件アクティブ";
+"n_running %lld" = "%lld件実行中";
+"epoch_progress %lld %lld" = "エポック %lld/%lld";
+"models_deleted %lld" = "%lld個のモデルを削除しました";
+"runs_deleted %lld" = "%lld件の実行を削除しました";
+"delete_selected %lld" = "選択した%lld件を削除";
+"view_all_active_runs %lld" = "すべての%lld件のアクティブな実行を表示";

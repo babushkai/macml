@@ -97,8 +97,8 @@ git push origin v1.2.3
 
 Each release includes:
 
-- `Performant3-X.Y.Z.dmg` - Disk image for easy installation
-- `Performant3-X.Y.Z.zip` - ZIP archive
+- `MacML-X.Y.Z.dmg` - Disk image for easy installation
+- `MacML-X.Y.Z.zip` - ZIP archive
 - Auto-generated changelog
 - SHA256 checksums
 

@@ -41,11 +41,11 @@ struct ContentView: View {
                     .padding(.top, 8)
             }
         }
-        .alert("Error", isPresented: .init(
+        .alert(L.error, isPresented: .init(
             get: { appState.errorMessage != nil },
             set: { if !$0 { appState.errorMessage = nil } }
         )) {
-            Button("OK") { appState.errorMessage = nil }
+            Button(L.ok) { appState.errorMessage = nil }
         } message: {
             Text(appState.errorMessage ?? "")
         }
@@ -70,13 +70,13 @@ struct SidebarView: View {
 
     var body: some View {
         List(selection: $appState.selectedTab) {
-            Section("Overview") {
-                Label(NavigationTab.dashboard.rawValue, systemImage: NavigationTab.dashboard.icon)
+            Section(L.dashboard) {
+                Label(NavigationTab.dashboard.localizedName, systemImage: NavigationTab.dashboard.icon)
                     .tag(NavigationTab.dashboard)
             }
 
             // Models Section - Expandable with individual models
-            Section("Models") {
+            Section(L.models) {
                 DisclosureGroup(isExpanded: $modelsExpanded) {
                     ForEach(appState.models) { model in
                         Button {
@@ -89,7 +89,7 @@ struct SidebarView: View {
                     }
 
                     if appState.models.isEmpty {
-                        Text("No models yet")
+                        Text(L.noModelsYet)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .padding(.leading, 4)
@@ -100,7 +100,7 @@ struct SidebarView: View {
                         appState.selectedTab = .models
                     } label: {
                         HStack {
-                            Label("All Models", systemImage: NavigationTab.models.icon)
+                            Label(L.allModels, systemImage: NavigationTab.models.icon)
                             Spacer()
                             Text("\(appState.models.count)")
                                 .font(.caption)
@@ -112,7 +112,7 @@ struct SidebarView: View {
             }
 
             // Training Runs Section - Expandable with individual runs
-            Section("Training") {
+            Section(L.training) {
                 DisclosureGroup(isExpanded: $runsExpanded) {
                     // Active runs first
                     if !appState.activeRuns.isEmpty {
@@ -139,7 +139,7 @@ struct SidebarView: View {
                     }
 
                     if appState.activeRuns.isEmpty && appState.completedRuns.isEmpty {
-                        Text("No training runs yet")
+                        Text(L.noTrainingRunsYet)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .padding(.leading, 4)
@@ -150,10 +150,10 @@ struct SidebarView: View {
                         appState.selectedTab = .runs
                     } label: {
                         HStack {
-                            Label("Training Runs", systemImage: NavigationTab.runs.icon)
+                            Label(L.trainingRuns, systemImage: NavigationTab.runs.icon)
                             Spacer()
                             if !appState.activeRuns.isEmpty {
-                                Text("\(appState.activeRuns.count) active")
+                                Text(L.nActive(appState.activeRuns.count))
                                     .font(.caption)
                                     .foregroundColor(.orange)
                             }
@@ -163,25 +163,25 @@ struct SidebarView: View {
                 }
             }
 
-            Section("Data & Experiments") {
-                Label(NavigationTab.experiments.rawValue, systemImage: NavigationTab.experiments.icon)
+            Section(L.experiments) {
+                Label(NavigationTab.experiments.localizedName, systemImage: NavigationTab.experiments.icon)
                     .tag(NavigationTab.experiments)
 
-                Label(NavigationTab.datasets.rawValue, systemImage: NavigationTab.datasets.icon)
+                Label(NavigationTab.datasets.localizedName, systemImage: NavigationTab.datasets.icon)
                     .tag(NavigationTab.datasets)
                     .badge(appState.datasets.count)
 
-                Label(NavigationTab.inference.rawValue, systemImage: NavigationTab.inference.icon)
+                Label(NavigationTab.inference.localizedName, systemImage: NavigationTab.inference.icon)
                     .tag(NavigationTab.inference)
             }
 
-            Section("Analytics") {
-                Label(NavigationTab.metrics.rawValue, systemImage: NavigationTab.metrics.icon)
+            Section(L.metrics) {
+                Label(NavigationTab.metrics.localizedName, systemImage: NavigationTab.metrics.icon)
                     .tag(NavigationTab.metrics)
             }
 
             Section {
-                Label(NavigationTab.settings.rawValue, systemImage: NavigationTab.settings.icon)
+                Label(NavigationTab.settings.localizedName, systemImage: NavigationTab.settings.icon)
                     .tag(NavigationTab.settings)
             }
         }
@@ -191,13 +191,13 @@ struct SidebarView: View {
             ToolbarItemGroup {
                 Menu {
                     Button(action: { appState.showNewModelSheet = true }) {
-                        Label("New Model", systemImage: "cpu.fill")
+                        Label(L.newModel, systemImage: "cpu.fill")
                     }
                     Button(action: { appState.showNewRunSheet = true }) {
-                        Label("New Training Run", systemImage: "play.fill")
+                        Label(L.newTrainingRun, systemImage: "play.fill")
                     }
                     Button(action: { appState.showImportDatasetSheet = true }) {
-                        Label("Import Dataset", systemImage: "folder.badge.plus")
+                        Label(L.importDataset, systemImage: "folder.badge.plus")
                     }
                 } label: {
                     Image(systemName: "plus")
@@ -239,7 +239,7 @@ struct SidebarModelRow: View {
                 appState.selectedModelId = model.id
                 appState.showNewRunSheet = true
             } label: {
-                Label("Train Model", systemImage: "play.fill")
+                Label(L.trainModel, systemImage: "play.fill")
             }
 
             if model.status == .ready && model.filePath != nil {
@@ -247,7 +247,7 @@ struct SidebarModelRow: View {
                     appState.selectedModelId = model.id
                     appState.selectedTab = .inference
                 } label: {
-                    Label("Run Inference", systemImage: "wand.and.stars")
+                    Label(L.runInference, systemImage: "wand.and.stars")
                 }
             }
 
@@ -257,7 +257,7 @@ struct SidebarModelRow: View {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(model.id, forType: .string)
             } label: {
-                Label("Copy Model ID", systemImage: "doc.on.doc")
+                Label(L.copyModelId, systemImage: "doc.on.doc")
             }
 
             Divider()
@@ -265,14 +265,14 @@ struct SidebarModelRow: View {
             Button(role: .destructive) {
                 showDeleteConfirmation = true
             } label: {
-                Label("Delete Model", systemImage: "trash")
+                Label(L.deleteModel, systemImage: "trash")
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 showDeleteConfirmation = true
             } label: {
-                Label("Delete", systemImage: "trash")
+                Label(L.delete, systemImage: "trash")
             }
         }
         .swipeActions(edge: .leading, allowsFullSwipe: false) {
@@ -280,17 +280,17 @@ struct SidebarModelRow: View {
                 appState.selectedModelId = model.id
                 appState.showNewRunSheet = true
             } label: {
-                Label("Train", systemImage: "play.fill")
+                Label(L.train, systemImage: "play.fill")
             }
             .tint(.green)
         }
-        .alert("Delete Model", isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+        .alert(L.deleteModel, isPresented: $showDeleteConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.delete, role: .destructive) {
                 Task { await appState.deleteModel(model) }
             }
         } message: {
-            Text("Are you sure you want to delete \"\(model.name)\"? Associated training runs will also be deleted.")
+            Text(L.confirmDeleteModel(model.name))
         }
     }
 
@@ -355,23 +355,23 @@ struct SidebarRunRow: View {
                 Button {
                     appState.pauseTraining(runId: run.id)
                 } label: {
-                    Label("Pause", systemImage: "pause.fill")
+                    Label(L.pause, systemImage: "pause.fill")
                 }
                 Button(role: .destructive) {
                     showCancelConfirmation = true
                 } label: {
-                    Label("Stop Training", systemImage: "stop.fill")
+                    Label(L.stopTraining, systemImage: "stop.fill")
                 }
             } else if run.status == .paused {
                 Button {
                     appState.resumeTraining(runId: run.id)
                 } label: {
-                    Label("Resume", systemImage: "play.fill")
+                    Label(L.resume, systemImage: "play.fill")
                 }
                 Button(role: .destructive) {
                     showCancelConfirmation = true
                 } label: {
-                    Label("Stop Training", systemImage: "stop.fill")
+                    Label(L.stopTraining, systemImage: "stop.fill")
                 }
             }
 
@@ -381,7 +381,7 @@ struct SidebarRunRow: View {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(run.id, forType: .string)
             } label: {
-                Label("Copy Run ID", systemImage: "doc.on.doc")
+                Label(L.copyRunId, systemImage: "doc.on.doc")
             }
 
             Divider()
@@ -389,14 +389,14 @@ struct SidebarRunRow: View {
             Button(role: .destructive) {
                 showDeleteConfirmation = true
             } label: {
-                Label("Delete Run", systemImage: "trash")
+                Label(L.deleteRun, systemImage: "trash")
             }
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 showDeleteConfirmation = true
             } label: {
-                Label("Delete", systemImage: "trash")
+                Label(L.delete, systemImage: "trash")
             }
         }
         .swipeActions(edge: .leading, allowsFullSwipe: false) {
@@ -404,33 +404,33 @@ struct SidebarRunRow: View {
                 Button {
                     appState.pauseTraining(runId: run.id)
                 } label: {
-                    Label("Pause", systemImage: "pause.fill")
+                    Label(L.pause, systemImage: "pause.fill")
                 }
                 .tint(.orange)
             } else if run.status == .paused {
                 Button {
                     appState.resumeTraining(runId: run.id)
                 } label: {
-                    Label("Resume", systemImage: "play.fill")
+                    Label(L.resume, systemImage: "play.fill")
                 }
                 .tint(.green)
             }
         }
-        .alert("Delete Run", isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+        .alert(L.deleteRun, isPresented: $showDeleteConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.delete, role: .destructive) {
                 Task { await appState.deleteRun(run) }
             }
         } message: {
-            Text("Are you sure you want to delete \"\(run.name)\"? This cannot be undone.")
+            Text(L.confirmDeleteModel(run.name))
         }
-        .alert("Stop Training", isPresented: $showCancelConfirmation) {
-            Button("Continue Training", role: .cancel) {}
-            Button("Stop", role: .destructive) {
+        .alert(L.stopTraining, isPresented: $showCancelConfirmation) {
+            Button(L.continueTraining, role: .cancel) {}
+            Button(L.stop, role: .destructive) {
                 appState.cancelTraining(runId: run.id)
             }
         } message: {
-            Text("Are you sure you want to stop this training run? Progress will be lost.")
+            Text(L.confirmStopTraining())
         }
     }
 

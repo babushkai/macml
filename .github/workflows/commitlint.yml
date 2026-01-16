@@ -1,0 +1,100 @@
+name: Commit Lint
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  commitlint:
+    name: Validate Commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install commitlint
+        run: |
+          npm install -g @commitlint/cli @commitlint/config-conventional
+
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "Validating PR title: $PR_TITLE"
+          echo "$PR_TITLE" | commitlint
+
+      - name: Validate commits
+        run: |
+          # Get the base branch
+          BASE_SHA=${{ github.event.pull_request.base.sha }}
+          HEAD_SHA=${{ github.event.pull_request.head.sha }}
+
+          echo "Validating commits from $BASE_SHA to $HEAD_SHA"
+
+          # Validate all commits in the PR
+          npx commitlint --from $BASE_SHA --to $HEAD_SHA --verbose
+
+  pr-title-check:
+    name: PR Title Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check PR title format
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+
+            // Conventional commit regex
+            const conventionalRegex = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|breaking)(\(.+\))?!?: .+$/;
+
+            if (!conventionalRegex.test(prTitle)) {
+              const errorMessage = `
+            ## ❌ Invalid PR Title
+
+            Your PR title doesn't follow the [Conventional Commits](https://www.conventionalcommits.org/) format.
+
+            ### Expected format:
+            \`type(scope): description\`
+
+            ### Valid types:
+            | Type | Description | Version Bump |
+            |------|-------------|--------------|
+            | \`feat\` | New feature | Minor |
+            | \`fix\` | Bug fix | Patch |
+            | \`docs\` | Documentation | None |
+            | \`style\` | Code style | None |
+            | \`refactor\` | Refactoring | None |
+            | \`perf\` | Performance | Patch |
+            | \`test\` | Tests | None |
+            | \`build\` | Build system | None |
+            | \`ci\` | CI config | None |
+            | \`chore\` | Maintenance | None |
+            | \`breaking\` | Breaking change | Major |
+
+            ### Examples:
+            - \`feat: add dark mode support\`
+            - \`fix(auth): resolve login timeout\`
+            - \`docs: update API documentation\`
+            - \`breaking: remove deprecated API endpoints\`
+
+            ### Your title:
+            \`${prTitle}\`
+            `;
+
+              core.setFailed(errorMessage);
+            } else {
+              console.log(`✅ PR title is valid: ${prTitle}`);
+            }

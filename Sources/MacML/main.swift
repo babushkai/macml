@@ -14,24 +14,24 @@ struct MacMLApp: App {
         .defaultSize(width: 1400, height: 900)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("New Model") {
+                Button(L.newModel) {
                     appState.showNewModelSheet = true
                 }
                 .keyboardShortcut("n", modifiers: .command)
 
-                Button("New Training Run") {
+                Button(L.newTrainingRun) {
                     appState.showNewRunSheet = true
                 }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
 
-                Button("Import Dataset") {
+                Button(L.importDataset) {
                     appState.showImportDatasetSheet = true
                 }
                 .keyboardShortcut("i", modifiers: .command)
             }
 
             CommandGroup(after: .sidebar) {
-                Button("Toggle Sidebar") {
+                Button(L.toggleSidebar) {
                     NSApp.keyWindow?.firstResponder?.tryToPerform(#selector(NSSplitViewController.toggleSidebar(_:)), with: nil)
                 }
                 .keyboardShortcut("s", modifiers: [.command, .control])
@@ -39,50 +39,50 @@ struct MacMLApp: App {
                 Divider()
 
                 // Navigation shortcuts
-                Button("Dashboard") {
+                Button(L.dashboard) {
                     appState.selectedTab = .dashboard
                 }
                 .keyboardShortcut("1", modifiers: .command)
 
-                Button("Models") {
+                Button(L.models) {
                     appState.selectedTab = .models
                 }
                 .keyboardShortcut("2", modifiers: .command)
 
-                Button("Training Runs") {
+                Button(L.trainingRuns) {
                     appState.selectedTab = .runs
                 }
                 .keyboardShortcut("3", modifiers: .command)
 
-                Button("Experiments") {
+                Button(L.experiments) {
                     appState.selectedTab = .experiments
                 }
                 .keyboardShortcut("4", modifiers: .command)
 
-                Button("Datasets") {
+                Button(L.datasets) {
                     appState.selectedTab = .datasets
                 }
                 .keyboardShortcut("5", modifiers: .command)
 
-                Button("Inference") {
+                Button(L.inference) {
                     appState.selectedTab = .inference
                 }
                 .keyboardShortcut("6", modifiers: .command)
 
-                Button("Metrics") {
+                Button(L.metrics) {
                     appState.selectedTab = .metrics
                 }
                 .keyboardShortcut("7", modifiers: .command)
 
-                Button("Settings") {
+                Button(L.settings) {
                     appState.selectedTab = .settings
                 }
                 .keyboardShortcut(",", modifiers: .command)
             }
 
             // Training controls
-            CommandMenu("Training") {
-                Button("Pause Training") {
+            CommandMenu(L.training) {
+                Button(L.pauseTraining) {
                     if let runId = appState.selectedRunId,
                        appState.selectedRun?.status == .running {
                         appState.pauseTraining(runId: runId)
@@ -91,7 +91,7 @@ struct MacMLApp: App {
                 .keyboardShortcut("p", modifiers: [.command, .shift])
                 .disabled(appState.selectedRun?.status != .running)
 
-                Button("Resume Training") {
+                Button(L.resumeTraining) {
                     if let runId = appState.selectedRunId,
                        appState.selectedRun?.status == .paused {
                         appState.resumeTraining(runId: runId)
@@ -100,7 +100,7 @@ struct MacMLApp: App {
                 .keyboardShortcut("p", modifiers: [.command, .option])
                 .disabled(appState.selectedRun?.status != .paused)
 
-                Button("Stop Training") {
+                Button(L.stopTraining) {
                     if let runId = appState.selectedRunId {
                         appState.cancelTraining(runId: runId)
                     }
@@ -110,14 +110,14 @@ struct MacMLApp: App {
 
                 Divider()
 
-                Button("Refresh Data") {
+                Button(L.refreshData) {
                     Task { await appState.loadData() }
                 }
                 .keyboardShortcut("r", modifiers: .command)
 
                 Divider()
 
-                Button("Delete All Failed Runs") {
+                Button(L.deleteAllFailedRuns) {
                     Task { await appState.deleteFailedRuns() }
                 }
                 .disabled(appState.runs.filter { $0.status == .failed }.isEmpty)
@@ -829,16 +829,29 @@ class AppState: ObservableObject {
 // MARK: - Navigation
 
 enum NavigationTab: String, CaseIterable, Identifiable {
-    case dashboard = "Dashboard"
-    case models = "Models"
-    case runs = "Training"
-    case experiments = "Experiments"
-    case metrics = "Metrics"
-    case datasets = "Datasets"
-    case inference = "Inference"
-    case settings = "Settings"
+    case dashboard
+    case models
+    case runs
+    case experiments
+    case metrics
+    case datasets
+    case inference
+    case settings
 
     var id: String { rawValue }
+
+    var localizedName: String {
+        switch self {
+        case .dashboard: return L.dashboard
+        case .models: return L.models
+        case .runs: return L.training
+        case .experiments: return L.experiments
+        case .metrics: return L.metrics
+        case .datasets: return L.datasets
+        case .inference: return L.inference
+        case .settings: return L.settings
+        }
+    }
 
     var icon: String {
         switch self {

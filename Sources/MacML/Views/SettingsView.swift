@@ -11,13 +11,13 @@ struct SettingsView: View {
     var learningRateValidation: (isValid: Bool, message: String) {
         let lr = appState.settings.defaultLearningRate
         if lr <= 0 {
-            return (false, "Learning rate must be positive")
+            return (false, L.learningRateMustBePositive)
         } else if lr > 1.0 {
-            return (false, "Learning rate should not exceed 1.0")
+            return (false, L.learningRateTooHigh)
         } else if lr < 0.00001 {
-            return (false, "Learning rate is very low (< 0.00001)")
+            return (false, L.learningRateVeryLow)
         } else if lr > 0.1 {
-            return (false, "Learning rate is quite high (> 0.1)")
+            return (false, L.learningRateQuiteHigh)
         }
         return (true, "")
     }
@@ -36,10 +36,10 @@ struct SettingsView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Settings")
+                    Text(L.settings)
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(AppTheme.textPrimary)
-                    Text("Configure training defaults and preferences")
+                    Text(L.configurePreferences)
                         .font(.caption)
                         .foregroundColor(AppTheme.textMuted)
                 }
@@ -50,23 +50,23 @@ struct SettingsView: View {
 
             Form {
             // General Settings
-            Section("General") {
-                Toggle("Auto-save training checkpoints", isOn: $appState.settings.autoSaveCheckpoints)
-                Toggle("Show notifications for completed runs", isOn: $appState.settings.showNotifications)
-                Toggle("Keep models in memory for faster inference", isOn: $appState.settings.cacheModels)
+            Section(L.general) {
+                Toggle(L.autoSaveCheckpoints, isOn: $appState.settings.autoSaveCheckpoints)
+                Toggle(L.showNotifications, isOn: $appState.settings.showNotifications)
+                Toggle(L.cacheModels, isOn: $appState.settings.cacheModels)
             }
 
             // Training Settings
-            Section("Training Defaults") {
-                Stepper("Default epochs: \(appState.settings.defaultEpochs)",
+            Section(L.trainingDefaults) {
+                Stepper("\(L.defaultEpochs): \(appState.settings.defaultEpochs)",
                        value: $appState.settings.defaultEpochs, in: 1...1000)
 
-                Stepper("Default batch size: \(appState.settings.defaultBatchSize)",
+                Stepper("\(L.defaultBatchSize): \(appState.settings.defaultBatchSize)",
                        value: $appState.settings.defaultBatchSize, in: 1...512)
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text("Default learning rate:")
+                        Text("\(L.defaultLearningRate):")
                         Spacer()
                         TextField("", value: $appState.settings.defaultLearningRate, format: .number)
                             .frame(width: 100)
@@ -91,14 +91,14 @@ struct SettingsView: View {
                     Image(systemName: "cpu.fill")
                         .foregroundColor(.green)
                     VStack(alignment: .leading) {
-                        Text("MLX Backend")
+                        Text(L.mlxBackend)
                             .fontWeight(.medium)
-                        Text("Apple Silicon Optimized")
+                        Text(L.appleSiliconOptimized)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                     Spacer()
-                    Text("Active")
+                    Text(L.active)
                         .foregroundColor(.green)
                         .fontWeight(.bold)
                 }
@@ -106,27 +106,27 @@ struct SettingsView: View {
                 HStack {
                     Image(systemName: "memorychip")
                         .foregroundColor(.blue)
-                    Text("GPU Acceleration")
+                    Text(L.gpuAcceleration)
                     Spacer()
-                    Text("Metal")
+                    Text(L.metal)
                         .foregroundColor(.secondary)
                 }
 
                 HStack {
                     Image(systemName: "bolt.fill")
                         .foregroundColor(.orange)
-                    Text("Automatic Differentiation")
+                    Text(L.automaticDifferentiation)
                     Spacer()
-                    Text("Enabled")
+                    Text(L.enabled)
                         .foregroundColor(.secondary)
                 }
 
-                Text("Training uses Apple's MLX framework with native Metal GPU acceleration. All gradients are computed using automatic differentiation.")
+                Text(L.mlxDescription)
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
                 HStack {
-                    Text("ML Training Backend")
+                    Text(L.mlTrainingBackend)
                     Spacer()
                     Image(systemName: "sparkle")
                         .foregroundColor(.purple)
@@ -134,38 +134,38 @@ struct SettingsView: View {
             }
 
             // Storage
-            Section("Storage") {
+            Section(L.storage) {
                 if let stats = storageStats {
                     HStack {
-                        Text("Total Size")
+                        Text(L.totalSize)
                         Spacer()
                         Text(formatBytes(stats.totalSize))
                             .foregroundColor(.secondary)
                     }
 
                     HStack {
-                        Text("Models")
+                        Text(L.models)
                         Spacer()
                         Text(formatBytes(stats.modelsSize))
                             .foregroundColor(.secondary)
                     }
 
                     HStack {
-                        Text("Datasets")
+                        Text(L.datasets)
                         Spacer()
                         Text(formatBytes(stats.datasetsSize))
                             .foregroundColor(.secondary)
                     }
 
                     HStack {
-                        Text("Cache")
+                        Text(L.cache)
                         Spacer()
                         Text(formatBytes(stats.cacheSize))
                             .foregroundColor(.secondary)
                     }
                 } else {
                     HStack {
-                        Text("Loading storage info...")
+                        Text(L.loadingStorageInfo)
                         Spacer()
                         ProgressView()
                             .scaleEffect(0.7)
@@ -173,7 +173,7 @@ struct SettingsView: View {
                 }
 
                 HStack {
-                    Button("Open Data Folder") {
+                    Button(L.openDataFolder) {
                         Task { await appState.openDataFolder() }
                     }
 
@@ -186,25 +186,25 @@ struct SettingsView: View {
                             ProgressView()
                                 .scaleEffect(0.7)
                         } else {
-                            Text("Clear Cache")
+                            Text(L.clearCache)
                         }
                     }
                     .disabled(isClearing || (storageStats?.cacheSize ?? 0) == 0)
-                    .help((storageStats?.cacheSize ?? 0) == 0 ? "Cache is empty" : "Clear temporary files and cached data")
+                    .help((storageStats?.cacheSize ?? 0) == 0 ? L.cacheEmpty : L.clearCache)
                 }
             }
 
             // About
-            Section("About") {
+            Section(L.about) {
                 HStack {
-                    Text("Version")
+                    Text(L.version)
                     Spacer()
                     Text("1.0.0")
                         .foregroundColor(.secondary)
                 }
 
                 HStack {
-                    Text("Build")
+                    Text(L.build)
                     Spacer()
                     Text("2024.1")
                         .foregroundColor(.secondary)
@@ -212,17 +212,17 @@ struct SettingsView: View {
             }
 
             // Demo Data
-            Section("Demo & Sample Data") {
+            Section(L.demoSampleData) {
                 Button(action: {
                     Task { await appState.loadDemoData() }
                 }) {
                     HStack {
                         Image(systemName: "sparkles")
-                        Text("Load Demo Data")
+                        Text(L.loadDemoData)
                     }
                 }
 
-                Text("Loads sample models, datasets, training runs, and inference results to explore the app features.")
+                Text(L.loadDemoDataDescription)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -232,18 +232,18 @@ struct SettingsView: View {
                 Button(role: .destructive, action: {
                     showResetSettingsConfirmation = true
                 }) {
-                    Text("Reset Settings to Defaults")
+                    Text(L.resetSettings)
                 }
 
                 Button(role: .destructive, action: {
                     showClearAllDataConfirmation = true
                 }) {
-                    Text("Clear All Data")
+                    Text(L.clearAllData)
                 }
             } header: {
-                Text("Danger Zone")
+                Text(L.dangerZone)
             } footer: {
-                Text("These actions cannot be undone.")
+                Text(L.cannotBeUndone)
             }
         }
         .formStyle(.grouped)
@@ -254,9 +254,9 @@ struct SettingsView: View {
         .onChange(of: appState.settings) { _, _ in
             Task { await appState.saveData() }
         }
-        .alert("Clear Cache", isPresented: $showClearCacheConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Clear Cache", role: .destructive) {
+        .alert(L.clearCache, isPresented: $showClearCacheConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.clearCache, role: .destructive) {
                 isClearing = true
                 Task {
                     await appState.clearCache()
@@ -265,25 +265,25 @@ struct SettingsView: View {
                 }
             }
         } message: {
-            Text("This will remove all cached data including temporary files. Models and datasets will not be affected.")
+            Text(L.confirmClearCache())
         }
-        .alert("Reset Settings", isPresented: $showResetSettingsConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Reset", role: .destructive) {
+        .alert(L.resetSettings, isPresented: $showResetSettingsConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.resetSettings, role: .destructive) {
                 appState.settings = .default
                 Task { await appState.saveData() }
-                appState.showSuccess("Settings reset to defaults")
+                appState.showSuccess(L.settingsReset)
             }
         } message: {
-            Text("This will reset all settings to their default values.")
+            Text(L.confirmResetSettings())
         }
-        .alert("Clear All Data", isPresented: $showClearAllDataConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Clear All", role: .destructive) {
+        .alert(L.clearAllData, isPresented: $showClearAllDataConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.clearAllData, role: .destructive) {
                 Task { await appState.clearAllData() }
             }
         } message: {
-            Text("This will permanently delete all models, datasets, training runs, and settings. This action cannot be undone.")
+            Text(L.confirmClearAllData())
         }
         }
         .background(AppTheme.background)

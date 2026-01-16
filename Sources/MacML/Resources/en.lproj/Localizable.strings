@@ -1,0 +1,264 @@
+/* Navigation & Tabs */
+"dashboard" = "Dashboard";
+"models" = "Models";
+"training" = "Training";
+"experiments" = "Experiments";
+"metrics" = "Metrics";
+"datasets" = "Datasets";
+"inference" = "Inference";
+"settings" = "Settings";
+
+/* Common Actions */
+"new_model" = "New Model";
+"new_training_run" = "New Training Run";
+"import_dataset" = "Import Dataset";
+"import_model" = "Import Model";
+"create_model" = "Create Model";
+"train_model" = "Train Model";
+"train" = "Train";
+"run_inference" = "Run Inference";
+"export" = "Export";
+"delete" = "Delete";
+"cancel" = "Cancel";
+"ok" = "OK";
+"save" = "Save";
+"create" = "Create";
+"refresh" = "Refresh";
+"clear" = "Clear";
+"close" = "Close";
+"browse" = "Browse...";
+
+/* Training Actions */
+"pause" = "Pause";
+"resume" = "Resume";
+"stop" = "Stop";
+"pause_training" = "Pause Training";
+"resume_training" = "Resume Training";
+"stop_training" = "Stop Training";
+"continue_training" = "Continue Training";
+"start_training" = "Start Training";
+
+/* Menu Items */
+"toggle_sidebar" = "Toggle Sidebar";
+"refresh_data" = "Refresh Data";
+"delete_all_failed_runs" = "Delete All Failed Runs";
+"training_runs" = "Training Runs";
+
+/* Status Labels */
+"status_active" = "Active";
+"status_completed" = "Completed";
+"status_failed" = "Failed";
+"status_cancelled" = "Cancelled";
+"status_paused" = "Paused";
+"status_running" = "Running";
+"status_queued" = "Queued";
+"status_draft" = "Draft";
+"status_ready" = "Ready";
+"status_importing" = "Importing";
+"status_deployed" = "Deployed";
+"status_archived" = "Archived";
+"status_deprecated" = "Deprecated";
+
+/* Dashboard */
+"mlops_command_center" = "MLOps Command Center";
+"train_deploy_monitor" = "Train, deploy, and monitor your machine learning models";
+"model_architectures" = "Model Architectures";
+"train_with_mlx" = "Train with MLX on Apple Silicon";
+"available_datasets" = "Available Datasets";
+"built_in_datasets" = "Built-in datasets ready to use";
+"quick_actions" = "Quick Actions";
+"recent_activity" = "Recent Activity";
+"training_analytics" = "Training Analytics";
+"accuracy_trend" = "Accuracy Trend";
+"model_hub" = "Model Hub";
+"dataset_hub" = "Dataset Hub";
+"live_metrics" = "Live Metrics";
+"active_training" = "Active Training";
+"uptime" = "Uptime";
+"throughput" = "Throughput";
+"jobs_queue" = "Jobs Queue";
+"success_rate" = "Success Rate";
+"storage" = "Storage";
+"avg_accuracy" = "Avg Accuracy";
+"best_model" = "Best Model";
+"welcome_to_macml" = "Welcome to MacML";
+"mlops_description" = "Your end-to-end MLOps platform powered by Apple Silicon";
+"load_demo_data" = "Load Demo Data";
+"complete_trends_message" = "Complete more runs to see trends";
+"import_or_create" = "Import or create";
+"train_a_model" = "Train a model";
+"add_training_data" = "Add training data";
+"test_your_model" = "Test your model";
+"training_completed" = "Training completed";
+"no_data_available" = "No datasets available";
+
+/* Models View */
+"all_models" = "All Models";
+"no_models_yet" = "No models yet";
+"no_matching_models" = "No Matching Models";
+"no_models" = "No Models";
+"search_models" = "Search models...";
+"all_frameworks" = "All Frameworks";
+"all_status" = "All Status";
+"select_multiple" = "Select Multiple";
+"cancel_selection" = "Cancel Selection";
+"show_archived" = "Show Archived";
+"delete_all_models" = "Delete All Models";
+"clear_filters" = "Clear Filters";
+"adjust_filters" = "Try adjusting your search or filters";
+"import_model_to_start" = "Import a model or create one to start training";
+"total" = "total";
+"copy_model_id" = "Copy Model ID";
+"archive" = "Archive";
+"restore" = "Restore";
+"mark_deprecated" = "Mark Deprecated";
+"undeprecate" = "Undeprecate";
+"drop_to_import" = "Drop to Import";
+"drag_drop_model" = "Drag & Drop Model Here";
+"supported_formats" = "Supports .mlmodel, .mlmodelc, .mlpackage, .safetensors files";
+"loading_model_info" = "Loading model info...";
+"metadata" = "Metadata";
+"created" = "Created";
+"updated" = "Updated";
+"author" = "Author";
+"version" = "Version";
+"inputs" = "Inputs";
+"outputs" = "Outputs";
+"description" = "Description";
+
+/* Training Runs View */
+"no_training_runs_yet" = "No training runs yet";
+"copy_run_id" = "Copy Run ID";
+"delete_run" = "Delete Run";
+"epoch" = "Epoch";
+"loss" = "Loss";
+"accuracy" = "Accuracy";
+"learning_rate" = "Learning Rate";
+
+/* Datasets View */
+"no_datasets_yet" = "No datasets yet";
+"search_datasets" = "Search datasets...";
+"all_types" = "All Types";
+"files" = "Files";
+"classes" = "Classes";
+"samples" = "Samples";
+"size" = "Size";
+"duration" = "Duration";
+"create_dataset" = "Create Dataset";
+"copy_dataset_id" = "Copy Dataset ID";
+"show_in_finder" = "Show in Finder";
+
+/* Inference View */
+"select_model" = "Select a model";
+"select_model_for_inference" = "Select a model to run inference";
+"drop_images" = "Drop images here or click to select";
+"batch_mode" = "Batch Mode";
+"batch_inference" = "Batch Inference Results";
+"inference_complete" = "Inference complete";
+"no_models_available" = "No models available";
+"export_csv" = "Export CSV";
+"export_json" = "Export JSON";
+
+/* Settings View */
+"general" = "General";
+"training_defaults" = "Training Defaults";
+"ml_training_backend" = "ML Training Backend";
+"auto_save_checkpoints" = "Auto-save training checkpoints";
+"show_notifications" = "Show notifications for completed runs";
+"cache_models" = "Keep models in memory for faster inference";
+"default_epochs" = "Default epochs";
+"default_batch_size" = "Default batch size";
+"default_learning_rate" = "Default learning rate";
+"mlx_backend" = "MLX Backend";
+"apple_silicon_optimized" = "Apple Silicon Optimized";
+"gpu_acceleration" = "GPU Acceleration";
+"metal" = "Metal";
+"automatic_differentiation" = "Automatic Differentiation";
+"enabled" = "Enabled";
+"mlx_description" = "Training uses Apple's MLX framework with native Metal GPU acceleration. All gradients are computed using automatic differentiation.";
+"total_size" = "Total Size";
+"cache" = "Cache";
+"loading_storage_info" = "Loading storage info...";
+"open_data_folder" = "Open Data Folder";
+"clear_cache" = "Clear Cache";
+"cache_empty" = "Cache is empty";
+"about" = "About";
+"build" = "Build";
+"demo_sample_data" = "Demo & Sample Data";
+"load_demo_data_description" = "Loads sample models, datasets, training runs, and inference results to explore the app features.";
+"danger_zone" = "Danger Zone";
+"reset_settings" = "Reset Settings to Defaults";
+"clear_all_data" = "Clear All Data";
+"cannot_be_undone" = "These actions cannot be undone.";
+"configure_preferences" = "Configure training defaults and preferences";
+
+/* Alerts & Confirmations */
+"error" = "Error";
+"delete_model" = "Delete Model";
+"delete_models" = "Delete Models";
+"delete_dataset" = "Delete Dataset";
+
+/* Loading Messages */
+"loading_data" = "Loading data...";
+"importing_model" = "Importing model...";
+"importing_dataset" = "Importing dataset...";
+"exporting_model" = "Exporting model...";
+"running_inference" = "Running inference...";
+
+/* Success Messages */
+"model_created" = "Model created";
+"model_deleted" = "Model deleted";
+"dataset_created" = "Dataset created";
+"dataset_deleted" = "Dataset deleted";
+"training_started" = "Training started";
+"training_paused" = "Training paused";
+"training_resumed" = "Training resumed";
+"training_cancelled" = "Training cancelled";
+"run_deleted" = "Run deleted";
+"cache_cleared" = "Cache cleared";
+"all_data_cleared" = "All data cleared";
+"settings_reset" = "Settings reset to defaults";
+"dataset_imported" = "Dataset imported";
+
+/* Validation Messages */
+"lr_must_be_positive" = "Learning rate must be positive";
+"lr_too_high" = "Learning rate should not exceed 1.0";
+"lr_very_low" = "Learning rate is very low (< 0.00001)";
+"lr_quite_high" = "Learning rate is quite high (> 0.1)";
+
+/* Sheets */
+"run_name" = "Run Name";
+"model" = "Model";
+"dataset" = "Dataset";
+"optional" = "Optional";
+"epochs" = "Epochs";
+"batch_size" = "Batch Size";
+"validation_split" = "Validation Split";
+"data_augmentation" = "Data Augmentation";
+"data_type" = "Data Type";
+"architecture" = "Architecture";
+"experiment" = "Experiment";
+"dataset_name" = "Dataset Name";
+"dataset_type" = "Dataset Type";
+"model_name" = "Model Name";
+"model_description" = "Model Description";
+"framework" = "Framework";
+"class_labels" = "Class Labels";
+"input_shape" = "Input Shape";
+"choose_model_file" = "Choose Model File";
+"drop_folder" = "Drop Folder to Import Dataset";
+
+/* Confirmation Messages with arguments */
+"confirm_delete_model %@" = "Are you sure you want to delete \"%@\"? Associated training runs will also be deleted.";
+"confirm_delete_models %lld" = "Are you sure you want to delete %lld models? Associated training runs will also be deleted. This cannot be undone.";
+"confirm_stop_training" = "Are you sure you want to stop this training run? Progress will be lost.";
+"confirm_clear_cache" = "This will remove all cached data including temporary files. Models and datasets will not be affected.";
+"confirm_reset_settings" = "This will reset all settings to their default values.";
+"confirm_clear_all_data" = "This will permanently delete all models, datasets, training runs, and settings. This action cannot be undone.";
+"n_active %lld" = "%lld active";
+"n_running %lld" = "%lld running";
+"epoch_progress %lld %lld" = "Epoch %lld/%lld";
+"models_deleted %lld" = "%lld models deleted";
+"runs_deleted %lld" = "%lld runs deleted";
+"delete_selected %lld" = "Delete Selected (%lld)";
+"view_all_active_runs %lld" = "View all %lld active runs";
