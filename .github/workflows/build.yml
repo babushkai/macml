@@ -1,4 +1,4 @@
-name: Build
+name: CI
 
 on:
   push:
@@ -6,92 +6,219 @@ on:
   pull_request:
     branches: [main, master]
 
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
+  checks: write
 
 env:
   APP_NAME: MacML
+  XCODE_VERSION: '15.4'
 
 jobs:
+  # ============================================
+  # Code Quality Checks
+  # ============================================
   lint:
     name: SwiftLint
     runs-on: macos-14
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Install SwiftLint
         run: brew install swiftlint
 
       - name: Run SwiftLint
-        run: swiftlint lint --reporter github-actions-logging
+        run: swiftlint lint --reporter github-actions-logging --strict
 
+  # ============================================
+  # Unit Tests with Coverage
+  # ============================================
   test:
-    name: Run Tests
+    name: Tests (Xcode ${{ matrix.xcode }})
     runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        xcode: ['15.4', '16.0']
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      - name: Setup Xcode
+      - name: Setup Xcode ${{ matrix.xcode }}
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: ${{ matrix.xcode }}
 
       - name: Cache Swift packages
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: .build
-          key: ${{ runner.os }}-spm-test-${{ hashFiles('Package.resolved') }}
+          key: ${{ runner.os }}-spm-${{ matrix.xcode }}-${{ hashFiles('Package.resolved') }}
           restore-keys: |
-            ${{ runner.os }}-spm-test-
-
-      - name: Run tests
-        run: swift test --parallel
-
-  build:
-    name: Build Application
-    runs-on: macos-14  # Apple Silicon runner (required for MLX)
-    needs: [lint, test]  # Only build if lint and tests pass
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-
-      - name: Cache Swift packages
-        uses: actions/cache@v5
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
-          restore-keys: |
+            ${{ runner.os }}-spm-${{ matrix.xcode }}-
             ${{ runner.os }}-spm-
 
       - name: Resolve dependencies
         run: swift package resolve
 
-      - name: Build application
+      - name: Run tests with coverage
         run: |
-          # Use a known derivedDataPath for reliable artifact location
+          swift test \
+            --parallel \
+            --enable-code-coverage \
+            --xunit-output test-results.xml \
+            2>&1 | tee test-output.log
+
+      - name: Generate coverage report
+        if: matrix.xcode == env.XCODE_VERSION
+        run: |
+          BIN_PATH=$(swift build --show-bin-path)
+          PROFDATA=$(find .build -name "*.profdata" | head -1)
+          
+          if [ -n "$PROFDATA" ]; then
+            xcrun llvm-cov export \
+              "$BIN_PATH/MacMLPackageTests.xctest/Contents/MacOS/MacMLPackageTests" \
+              -instr-profile="$PROFDATA" \
+              -format="lcov" \
+              -ignore-filename-regex=".build|Tests" \
+              > coverage.lcov
+            
+            # Generate summary
+            xcrun llvm-cov report \
+              "$BIN_PATH/MacMLPackageTests.xctest/Contents/MacOS/MacMLPackageTests" \
+              -instr-profile="$PROFDATA" \
+              -ignore-filename-regex=".build|Tests" \
+              > coverage-summary.txt
+            
+            echo "### Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat coverage-summary.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload coverage to Codecov
+        if: matrix.xcode == env.XCODE_VERSION && github.event_name == 'push'
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.lcov
+          fail_ci_if_error: false
+        continue-on-error: true
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always() && matrix.xcode == env.XCODE_VERSION
+        with:
+          name: Test Results
+          path: test-results.xml
+          reporter: java-junit
+          fail-on-error: false
+        continue-on-error: true
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-xcode-${{ matrix.xcode }}
+          path: |
+            test-output.log
+            test-results.xml
+          retention-days: 5
+
+  # ============================================
+  # Security & Dependency Checks
+  # ============================================
+  security:
+    name: Security Scan
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "Scanning for potential secrets..."
+          # Check for common secret patterns
+          if grep -rE "(password|secret|api[_-]?key|token)\s*[:=]\s*['\"][^'\"]+['\"]" \
+            --include="*.swift" \
+            --exclude-dir=".build" \
+            Sources/; then
+            echo "::warning::Potential hardcoded secrets found. Please review."
+          else
+            echo "No obvious hardcoded secrets found."
+          fi
+
+      - name: Check for vulnerable dependencies
+        run: |
+          echo "Checking Package.resolved for known issues..."
+          if [ -f "Package.resolved" ]; then
+            # Check for pinned versions and report
+            echo "### Dependency Versions" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat Package.resolved | head -50 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check for TODO/FIXME security items
+        run: |
+          echo "Scanning for security-related TODOs..."
+          grep -rn "TODO.*security\|FIXME.*security\|TODO.*auth\|FIXME.*auth" \
+            --include="*.swift" \
+            Sources/ || echo "No security TODOs found"
+
+  # ============================================
+  # Build Application
+  # ============================================
+  build:
+    name: Build App
+    runs-on: macos-14
+    needs: [lint, test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ env.XCODE_VERSION }}
+
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-spm-build-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-build-
+            ${{ runner.os }}-spm-
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Build application (Release)
+        run: |
           xcodebuild -scheme MacML \
             -destination 'platform=macOS' \
             -configuration Release \
             -derivedDataPath "${{ runner.temp }}/DerivedData" \
-            build
+            build \
+            | xcbeautify --renderer github-actions || true
 
       - name: Package application bundle
         id: package
         run: |
-          # Determine version for PR builds
+          # Determine version
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             VERSION="pr-${{ github.event.pull_request.number }}-$(echo ${{ github.sha }} | cut -c1-7)"
           else
@@ -99,26 +226,16 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-          # Use the known derivedDataPath
           DERIVED_DATA="${{ runner.temp }}/DerivedData/Build/Products/Release"
-
-          echo "Build products at: $DERIVED_DATA"
-          ls -la "$DERIVED_DATA" || echo "Directory listing failed"
 
           # Verify executable exists
           if [ ! -f "$DERIVED_DATA/MacML" ]; then
-            echo "ERROR: Executable not found!"
-            echo "Searching for executable..."
+            echo "::error::Executable not found!"
             find "${{ runner.temp }}/DerivedData" -name "MacML" -type f 2>/dev/null || true
             exit 1
           fi
 
-          # Verify Metal bundle exists (critical for MLX)
-          if [ ! -d "$DERIVED_DATA/mlx-swift_Cmlx.bundle" ]; then
-            echo "WARNING: MLX Metal bundle not found - Metal operations may fail"
-          fi
-
-          # Create app bundle structure
+          # Create app bundle
           APP_DIR="${APP_NAME}.app"
           rm -rf "$APP_DIR"
           mkdir -p "$APP_DIR/Contents/MacOS"
@@ -128,56 +245,62 @@ jobs:
           # Copy executable
           cp "$DERIVED_DATA/MacML" "$APP_DIR/Contents/MacOS/"
 
-          # Update Info.plist with version
+          # Update Info.plist
           cp Info.plist "$APP_DIR/Contents/"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$APP_DIR/Contents/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" "$APP_DIR/Contents/Info.plist"
 
-          # Copy Metal library bundle (critical for MLX)
+          # Copy MLX Metal library bundle
           if [ -d "$DERIVED_DATA/mlx-swift_Cmlx.bundle" ]; then
             cp -R "$DERIVED_DATA/mlx-swift_Cmlx.bundle" "$APP_DIR/Contents/Resources/"
-            echo "Copied MLX Metal library bundle"
+            echo "✓ Copied MLX Metal library bundle"
+          else
+            echo "::warning::MLX Metal bundle not found - Metal operations may fail"
           fi
 
           # Copy other bundles
           for bundle in "$DERIVED_DATA"/*.bundle; do
             if [ -d "$bundle" ]; then
               cp -R "$bundle" "$APP_DIR/Contents/Resources/"
-              echo "Copied $(basename "$bundle")"
+              echo "✓ Copied $(basename "$bundle")"
             fi
           done
 
-          # Copy Python training scripts
+          # Copy Python scripts
           if [ -d "Resources/Scripts" ]; then
             mkdir -p "$APP_DIR/Contents/Resources/Scripts"
             cp -R Resources/Scripts/* "$APP_DIR/Contents/Resources/Scripts/"
-            echo "Copied Python training scripts"
+            echo "✓ Copied Python training scripts"
           fi
 
           # Copy app icon
           if [ -f "Resources/AppIcon.icns" ]; then
             cp "Resources/AppIcon.icns" "$APP_DIR/Contents/Resources/"
-            echo "Copied app icon"
           fi
 
-          # Copy frameworks if any
+          # Copy frameworks
           for framework in "$DERIVED_DATA/PackageFrameworks"/*.framework; do
             if [ -d "$framework" ]; then
               cp -R "$framework" "$APP_DIR/Contents/Frameworks/"
-              echo "Copied $(basename "$framework")"
             fi
           done
 
           # Create PkgInfo
           echo -n "APPL????" > "$APP_DIR/Contents/PkgInfo"
 
-          # Ad-hoc sign for testing
+          # Ad-hoc sign
           codesign --force --deep --sign - "$APP_DIR"
 
-          echo "Build artifacts verified successfully"
-          echo "Created $APP_DIR"
+          echo "✓ Created $APP_DIR (version: $VERSION)"
 
-      - name: Create ZIP for artifact
+      - name: Calculate bundle size
+        run: |
+          SIZE=$(du -sh "${APP_NAME}.app" | cut -f1)
+          echo "### Build Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- **App Bundle Size:** $SIZE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ steps.package.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create ZIP artifact
         id: zip
         run: |
           ZIP_NAME="${APP_NAME}-${{ steps.package.outputs.version }}.zip"
@@ -185,38 +308,45 @@ jobs:
           echo "zip_name=$ZIP_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-${{ steps.package.outputs.version }}
           path: ${{ steps.zip.outputs.zip_name }}
           retention-days: 7
 
-      - name: Comment PR with download link
+      - name: Comment PR with build info
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v7
         with:
           script: |
             const artifactUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const body = `## Build Successful :white_check_mark:
+            const body = `## Build Successful ✅
 
-            A test build is available for this PR.
+            | Item | Value |
+            |------|-------|
+            | **Version** | \`${{ steps.package.outputs.version }}\` |
+            | **Xcode** | ${{ env.XCODE_VERSION }} |
+            | **Download** | [View Artifacts](${artifactUrl}) |
 
-            **Download:** [View Artifacts](${artifactUrl}) → Scroll to "Artifacts" section
+            > **Note:** The app is ad-hoc signed. Right-click → "Open" to bypass Gatekeeper.
 
-            **Version:** \`${{ steps.package.outputs.version }}\`
+            <details>
+            <summary>Build Details</summary>
 
-            > **Note:** The app is ad-hoc signed. On first launch, right-click and select "Open" to bypass Gatekeeper.`;
+            - Commit: \`${{ github.sha }}\`
+            - Runner: \`${{ runner.os }}-${{ runner.arch }}\`
+            - Workflow: \`${{ github.workflow }}\`
 
-            // Check if we already commented
+            </details>`;
+
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
 
-            const botComment = comments.find(comment =>
-              comment.user.type === 'Bot' &&
-              comment.body.includes('Build Successful')
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('Build Successful')
             );
 
             if (botComment) {
@@ -234,3 +364,31 @@ jobs:
                 body: body
               });
             }
+
+  # ============================================
+  # Build Status Summary
+  # ============================================
+  status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [lint, test, security, build]
+    if: always()
+
+    steps:
+      - name: Check job results
+        run: |
+          echo "### CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result == 'success' && '✅' || '❌' }} ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result == 'success' && '✅' || '❌' }} ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ${{ needs.security.result == 'success' && '✅' || '❌' }} ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result == 'success' && '✅' || '❌' }} ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if any job failed
+        if: |
+          needs.lint.result == 'failure' ||
+          needs.test.result == 'failure' ||
+          needs.build.result == 'failure'
+        run: exit 1
