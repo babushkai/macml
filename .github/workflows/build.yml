@@ -14,9 +14,48 @@ env:
   APP_NAME: MacML
 
 jobs:
+  lint:
+    name: SwiftLint
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Run SwiftLint
+        run: swiftlint lint --reporter github-actions-logging
+
+  test:
+    name: Run Tests
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Cache Swift packages
+        uses: actions/cache@v5
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-test-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-test-
+
+      - name: Run tests
+        run: swift test --parallel
+
   build:
-    name: Build and Test
+    name: Build Application
     runs-on: macos-14  # Apple Silicon runner (required for MLX)
+    needs: [lint, test]  # Only build if lint and tests pass
 
     steps:
       - name: Checkout code
