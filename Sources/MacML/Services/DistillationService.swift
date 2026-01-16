@@ -34,7 +34,8 @@ class DistillationService: ObservableObject {
 
         // Start async distillation task
         let task = Task { [weak self] in
-            await self?.runDistillationPipeline(runId: run.id)
+            guard let self = self else { return }
+            await self.runDistillationPipeline(runId: run.id)
         }
         tasks[run.id] = task
 
