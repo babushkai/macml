@@ -200,12 +200,11 @@ class AppState: ObservableObject {
         do {
             try await DatabaseManager.shared.setup()
             databaseInitialized = true
+            Log.info("Database initialized successfully", category: .database)
         } catch {
-            print("[MacML] Database initialization failed: \(error.localizedDescription)")
+            Log.error("Database initialization failed", error: error, category: .database)
             // Continue with JSON storage as fallback
-            #if DEBUG
-            print("[MacML] Debug: Full error details - \(error)")
-            #endif
+            Log.debug("Falling back to JSON storage", category: .database)
         }
     }
 
@@ -216,38 +215,38 @@ class AppState: ObservableObject {
         loadingMessage = "Loading data..."
 
         do {
-            print("[DEBUG] Loading models...")
+            Log.debug("Loading models...", category: .database)
             models = try await storage.loadModels()
-            print("[DEBUG] Loaded \(models.count) models")
+            Log.debug("Loaded \(models.count) models", category: .database)
 
-            print("[DEBUG] Loading runs...")
+            Log.debug("Loading runs...", category: .database)
             runs = try await storage.loadRuns()
-            print("[DEBUG] Loaded \(runs.count) runs")
+            Log.debug("Loaded \(runs.count) runs", category: .database)
 
-            print("[DEBUG] Loading datasets...")
+            Log.debug("Loading datasets...", category: .database)
             datasets = try await storage.loadDatasets()
-            print("[DEBUG] Loaded \(datasets.count) datasets")
+            Log.debug("Loaded \(datasets.count) datasets", category: .database)
 
-            print("[DEBUG] Loading settings...")
+            Log.debug("Loading settings...", category: .database)
             settings = try await storage.loadSettings()
-            print("[DEBUG] Settings loaded")
+            Log.debug("Settings loaded", category: .database)
 
             // Try to load inference history from database first, fall back to JSON
             if databaseInitialized {
-                print("[DEBUG] Loading inference history from database...")
+                Log.debug("Loading inference history from database...", category: .database)
                 let repo = InferenceResultRepository()
                 inferenceHistory = (try? await repo.findAll(limit: Constants.maxInferenceHistoryCount)) ?? []
-                print("[DEBUG] Loaded \(inferenceHistory.count) inference results from database")
+                Log.debug("Loaded \(inferenceHistory.count) inference results from database", category: .database)
             }
 
             // If database has no results, try JSON as fallback
             if inferenceHistory.isEmpty {
-                print("[DEBUG] Loading inference history from JSON...")
+                Log.debug("Loading inference history from JSON...", category: .database)
                 inferenceHistory = try await storage.loadInferenceHistory()
-                print("[DEBUG] Loaded \(inferenceHistory.count) inference results from JSON")
+                Log.debug("Loaded \(inferenceHistory.count) inference results from JSON", category: .database)
             }
         } catch {
-            print("[DEBUG] Load error: \(error)")
+            Log.error("Failed to load data", error: error, category: .database)
             errorMessage = "Failed to load data: \(error.localizedDescription)"
         }
 
@@ -290,9 +289,7 @@ class AppState: ObservableObject {
                 }
             }
 
-            #if DEBUG
-            print("[MacML] Cleaned up \(staleCount) stale training run(s) from previous session")
-            #endif
+            Log.debug("Cleaned up \(staleCount) stale training run(s) from previous session", category: .training)
         }
     }
 
@@ -417,7 +414,7 @@ class AppState: ObservableObject {
             do {
                 try await storage.deleteModelFile(model)
             } catch {
-                print("Failed to delete model file: \(error)")
+                Log.warning("Failed to delete model file: \(error.localizedDescription)", category: .app)
             }
         }
         let idsToDelete = Set(modelsToDelete.map { $0.id })
@@ -483,7 +480,7 @@ class AppState: ObservableObject {
         // Get the best checkpoint for this run
         do {
             guard let checkpoint = try await CheckpointManager.shared.getLatestCheckpoint(runId: run.id) else {
-                print("No checkpoint found for run \(run.id)")
+                Log.debug("No checkpoint found for run \(run.id)", category: .training)
                 return
             }
 
