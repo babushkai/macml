@@ -11,7 +11,7 @@ permissions:
   pull-requests: write
 
 env:
-  APP_NAME: Performant3
+  APP_NAME: MacML
 
 jobs:
   build:
@@ -43,7 +43,7 @@ jobs:
       - name: Build application
         run: |
           # Use a known derivedDataPath for reliable artifact location
-          xcodebuild -scheme Performant3 \
+          xcodebuild -scheme MacML \
             -destination 'platform=macOS' \
             -configuration Release \
             -derivedDataPath "${{ runner.temp }}/DerivedData" \
@@ -67,10 +67,10 @@ jobs:
           ls -la "$DERIVED_DATA" || echo "Directory listing failed"
 
           # Verify executable exists
-          if [ ! -f "$DERIVED_DATA/Performant3" ]; then
+          if [ ! -f "$DERIVED_DATA/MacML" ]; then
             echo "ERROR: Executable not found!"
             echo "Searching for executable..."
-            find "${{ runner.temp }}/DerivedData" -name "Performant3" -type f 2>/dev/null || true
+            find "${{ runner.temp }}/DerivedData" -name "MacML" -type f 2>/dev/null || true
             exit 1
           fi
 
@@ -87,7 +87,7 @@ jobs:
           mkdir -p "$APP_DIR/Contents/Frameworks"
 
           # Copy executable
-          cp "$DERIVED_DATA/Performant3" "$APP_DIR/Contents/MacOS/"
+          cp "$DERIVED_DATA/MacML" "$APP_DIR/Contents/MacOS/"
 
           # Update Info.plist with version
           cp Info.plist "$APP_DIR/Contents/"

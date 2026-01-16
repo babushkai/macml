@@ -1,5 +1,10 @@
 import Foundation
 import GRDB
+import os.log
+
+// MARK: - Database Logger
+
+private let logger = Logger(subsystem: "com.macml.database", category: "DatabaseManager")
 
 // MARK: - Database Manager
 
@@ -13,7 +18,11 @@ actor DatabaseManager {
     private var databaseURL: URL {
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let appDir = appSupport.appendingPathComponent("MacML", isDirectory: true)
-        try? fileManager.createDirectory(at: appDir, withIntermediateDirectories: true)
+        do {
+            try fileManager.createDirectory(at: appDir, withIntermediateDirectories: true)
+        } catch {
+            logger.error("Failed to create database directory: \(error.localizedDescription)")
+        }
         return appDir.appendingPathComponent("macml.sqlite")
     }
 
@@ -24,8 +33,16 @@ actor DatabaseManager {
         config.foreignKeysEnabled = true
         config.prepareDatabase { db in
             // Enable WAL mode for better concurrent access
-            try? db.execute(sql: "PRAGMA journal_mode = WAL")
-            try? db.execute(sql: "PRAGMA synchronous = NORMAL")
+            do {
+                try db.execute(sql: "PRAGMA journal_mode = WAL")
+            } catch {
+                logger.warning("Failed to set WAL journal mode: \(error.localizedDescription). Using default mode.")
+            }
+            do {
+                try db.execute(sql: "PRAGMA synchronous = NORMAL")
+            } catch {
+                logger.warning("Failed to set synchronous mode: \(error.localizedDescription). Using default mode.")
+            }
         }
 
         dbPool = try DatabasePool(path: databaseURL.path, configuration: config)
