@@ -32,8 +32,8 @@ module.exports = {
     'scope-case': [2, 'always', 'lower-case'],
     // Subject cannot be empty
     'subject-empty': [2, 'never'],
-    // Subject must start with lowercase
-    'subject-case': [2, 'always', 'lower-case'],
+    // Subject case - disabled (conventional commits don't require lowercase)
+    'subject-case': [0],
     // No period at end of subject
     'subject-full-stop': [2, 'never', '.'],
     // Header max length (type + scope + subject)

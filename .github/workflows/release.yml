@@ -241,65 +241,66 @@ jobs:
           echo "zip_path=$ZIP_NAME" >> $GITHUB_ENV
           echo "Created $ZIP_NAME"
 
-      - name: Generate changelog
-        id: changelog
+      - name: Install git-cliff
+        run: |
+          brew install git-cliff
+
+      - name: Generate changelog with git-cliff
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          # Get the previous tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
+          # Generate categorized changelog using git-cliff
           if [ -n "$PREV_TAG" ]; then
-            echo "Generating changelog from $PREV_TAG to HEAD"
-            CHANGELOG=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges | head -50)
+            git-cliff ${PREV_TAG}..HEAD --tag "v${VERSION}" -o changelog_section.md
           else
-            echo "No previous tag found, using recent commits"
-            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges -20)
+            git-cliff --tag "v${VERSION}" -o changelog_section.md
           fi
 
-          # Write changelog to file (handle multiline)
-          echo "$CHANGELOG" > changelog.txt
+          # Create release notes
+          cat << EOF > release_notes.md
+          ## MacML v${VERSION}
 
-      - name: Generate release notes
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          CHANGELOG=$(cat changelog.txt)
+          EOF
 
-          cat << 'EOF' > release_notes.md
-          ## MacML v${{ steps.version.outputs.version }}
+          # Add categorized changelog
+          if [ -f changelog_section.md ]; then
+            sed -n '/^## \[/,/^## \[/p' changelog_section.md | head -n -1 >> release_notes.md 2>/dev/null || \
+            cat changelog_section.md >> release_notes.md
+          fi
 
-          ### Installation
+          cat << EOF >> release_notes.md
 
-          1. Download `Performant3-${{ steps.version.outputs.version }}.dmg`
+          ---
+
+          ### 📦 Installation
+
+          1. Download \`${APP_NAME}-${VERSION}.dmg\`
           2. Open the DMG file
           3. Drag **MacML** to your Applications folder
           4. Launch from Applications
 
           > **Note:** On first launch, right-click and select "Open" if you see a Gatekeeper warning (for ad-hoc signed builds).
 
-          ### System Requirements
+          ### 💻 System Requirements
 
           - macOS 14.0 (Sonoma) or later
           - Apple Silicon Mac (M1/M2/M3/M4)
 
-          ### What's Changed
-
-          EOF
-
-          cat changelog.txt >> release_notes.md
-
-          cat << EOF >> release_notes.md
-
-          ### Checksums
+          ### 🔐 Checksums
 
           \`\`\`
-          SHA256 (DMG): $(shasum -a 256 "${APP_NAME}-${{ steps.version.outputs.version }}.dmg" | awk '{print $1}')
-          SHA256 (ZIP): $(shasum -a 256 "${APP_NAME}-${{ steps.version.outputs.version }}.zip" | awk '{print $1}')
+          SHA256 (DMG): $(shasum -a 256 "${APP_NAME}-${VERSION}.dmg" | awk '{print $1}')
+          SHA256 (ZIP): $(shasum -a 256 "${APP_NAME}-${VERSION}.zip" | awk '{print $1}')
           \`\`\`
 
           ---
-          **Full Changelog**: https://github.com/${{ github.repository }}/compare/$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "initial")...v${{ steps.version.outputs.version }}
+
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-initial}...v${VERSION}
+
+          ---
+          _Release generated with ❤️ by MacML CI_
           EOF
 
       - name: Create tag for manual release
