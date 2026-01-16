@@ -83,10 +83,10 @@ struct InferenceInputPanel: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Inference")
+                    Text(L.inference)
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(AppTheme.textPrimary)
-                    Text("Run predictions with your trained models")
+                    Text(L.selectModelForInference)
                         .font(.caption)
                         .foregroundColor(AppTheme.textMuted)
                 }
@@ -129,12 +129,12 @@ struct InferenceInputPanel: View {
                             // Batch mode toggle
                             HStack {
                                 Toggle(isOn: $batchMode) {
-                                    Label("Batch Mode", systemImage: "square.stack.3d.up")
+                                    Label(L.batchMode, systemImage: "square.stack.3d.up")
                                 }
                                 .toggleStyle(.switch)
 
                                 if batchMode && !batchImageURLs.isEmpty {
-                                    Text("\(batchImageURLs.count) images selected")
+                                    Text("\(batchImageURLs.count) \(L.files)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -143,7 +143,7 @@ struct InferenceInputPanel: View {
 
                                 if batchMode && !batchImageURLs.isEmpty {
                                     Button(action: { batchImageURLs.removeAll() }) {
-                                        Label("Clear", systemImage: "xmark.circle")
+                                        Label(L.clear, systemImage: "xmark.circle")
                                     }
                                     .buttonStyle(.borderless)
                                 }

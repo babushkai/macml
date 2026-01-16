@@ -108,7 +108,7 @@ struct RunsView: View {
                                             bulkDeleteType = .selected
                                             showingBulkDeleteConfirmation = true
                                         } label: {
-                                            Label("Delete Selected (\(selectedRuns.count))", systemImage: "trash")
+                                            Label(L.deleteSelected(selectedRuns.count), systemImage: "trash")
                                         }
                                         Divider()
                                     }
@@ -119,7 +119,7 @@ struct RunsView: View {
                                             selectedRuns.removeAll()
                                         }
                                     } label: {
-                                        Label(isSelectionMode ? "Cancel Selection" : "Select Multiple", systemImage: isSelectionMode ? "xmark" : "checkmark.circle")
+                                        Label(isSelectionMode ? L.cancelSelection : L.selectMultiple, systemImage: isSelectionMode ? "xmark" : "checkmark.circle")
                                     }
 
                                     if failedRunsCount > 0 {
@@ -127,7 +127,7 @@ struct RunsView: View {
                                             bulkDeleteType = .failed
                                             showingBulkDeleteConfirmation = true
                                         } label: {
-                                            Label("Delete All Failed (\(failedRunsCount))", systemImage: "trash")
+                                            Label(L.deleteAllFailedRuns + " (\(failedRunsCount))", systemImage: "trash")
                                         }
                                     }
 
@@ -137,7 +137,7 @@ struct RunsView: View {
                                         bulkDeleteType = .all
                                         showingBulkDeleteConfirmation = true
                                     } label: {
-                                        Label("Delete All Runs", systemImage: "trash.fill")
+                                        Label(L.deleteAllFailedRuns, systemImage: "trash.fill")
                                     }
                                 } label: {
                                     Image(systemName: "ellipsis.circle")
@@ -148,7 +148,7 @@ struct RunsView: View {
                             }
 
                             Button(action: { appState.showNewRunSheet = true }) {
-                                Label("New Run", systemImage: "play.fill")
+                                Label(L.newTrainingRun, systemImage: "play.fill")
                             }
                             .buttonStyle(.borderedProminent)
                             .disabled(appState.models.isEmpty)
@@ -159,7 +159,7 @@ struct RunsView: View {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.secondary)
-                        TextField("Search runs...", text: $searchText)
+                        TextField(L.searchModels, text: $searchText)
                             .textFieldStyle(.plain)
                         if !searchText.isEmpty {
                             Button(action: { searchText = "" }) {
@@ -230,7 +230,7 @@ struct RunsView: View {
                                             runToDelete = run
                                             showingDeleteConfirmation = true
                                         } label: {
-                                            Label("Delete", systemImage: "trash")
+                                            Label(L.delete, systemImage: "trash")
                                         }
                                     }
                                     .swipeActions(edge: .leading, allowsFullSwipe: false) {
@@ -238,14 +238,14 @@ struct RunsView: View {
                                             Button {
                                                 appState.pauseTraining(runId: run.id)
                                             } label: {
-                                                Label("Pause", systemImage: "pause.fill")
+                                                Label(L.pause, systemImage: "pause.fill")
                                             }
                                             .tint(.orange)
                                         } else if run.status == .paused {
                                             Button {
                                                 appState.resumeTraining(runId: run.id)
                                             } label: {
-                                                Label("Resume", systemImage: "play.fill")
+                                                Label(L.resume, systemImage: "play.fill")
                                             }
                                             .tint(.green)
                                         }
@@ -279,19 +279,19 @@ struct RunsView: View {
             }
         }
         .background(Color(NSColor.windowBackgroundColor))
-        .alert("Delete Run", isPresented: $showingDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+        .alert(L.deleteRun, isPresented: $showingDeleteConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.delete, role: .destructive) {
                 if let run = runToDelete {
                     Task { await appState.deleteRun(run) }
                 }
             }
         } message: {
-            Text("Are you sure you want to delete \"\(runToDelete?.name ?? "this run")\"? This cannot be undone.")
+            Text(L.confirmDeleteModel(runToDelete?.name ?? ""))
         }
         .alert(bulkDeleteAlertTitle, isPresented: $showingBulkDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.delete, role: .destructive) {
                 Task { await performBulkDelete() }
             }
         } message: {
@@ -312,17 +312,17 @@ struct RunsView: View {
     private func runContextMenu(for run: TrainingRun) -> some View {
         if run.status == .running {
             Button { appState.pauseTraining(runId: run.id) } label: {
-                Label("Pause", systemImage: "pause.fill")
+                Label(L.pause, systemImage: "pause.fill")
             }
             Button(role: .destructive) { appState.cancelTraining(runId: run.id) } label: {
-                Label("Cancel", systemImage: "stop.fill")
+                Label(L.cancel, systemImage: "stop.fill")
             }
         } else if run.status == .paused {
             Button { appState.resumeTraining(runId: run.id) } label: {
-                Label("Resume", systemImage: "play.fill")
+                Label(L.resume, systemImage: "play.fill")
             }
             Button(role: .destructive) { appState.cancelTraining(runId: run.id) } label: {
-                Label("Cancel", systemImage: "stop.fill")
+                Label(L.cancel, systemImage: "stop.fill")
             }
         }
 
@@ -332,7 +332,7 @@ struct RunsView: View {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(run.id, forType: .string)
         } label: {
-            Label("Copy Run ID", systemImage: "doc.on.doc")
+            Label(L.copyRunId, systemImage: "doc.on.doc")
         }
 
         Divider()
@@ -341,7 +341,7 @@ struct RunsView: View {
             runToDelete = run
             showingDeleteConfirmation = true
         } label: {
-            Label("Delete", systemImage: "trash")
+            Label(L.delete, systemImage: "trash")
         }
     }
 
@@ -443,12 +443,12 @@ struct EmptyRunsView: View {
 
             if filter == .all && hasModels {
                 Button(action: onCreateRun) {
-                    Label("Start Training", systemImage: "play.fill")
+                    Label(L.startTraining, systemImage: "play.fill")
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
             } else if filter == .all && !hasModels {
-                Text("Create a model first to start training")
+                Text(L.importModelToStart)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -468,10 +468,10 @@ struct EmptyRunsView: View {
 
     private var titleForFilter: String {
         switch filter {
-        case .all: return "No Training Runs"
-        case .active: return "No Active Runs"
-        case .completed: return "No Completed Runs"
-        case .failed: return "No Failed Runs"
+        case .all: return L.noTrainingRunsYet
+        case .active: return L.noTrainingRunsYet
+        case .completed: return L.noTrainingRunsYet
+        case .failed: return L.noTrainingRunsYet
         }
     }
 

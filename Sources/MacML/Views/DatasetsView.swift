@@ -93,14 +93,14 @@ struct DatasetsView: View {
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Datasets")
+                            Text(L.datasets)
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(AppTheme.textPrimary)
 
                             HStack(spacing: 12) {
-                                Label("\(activeCount) active", systemImage: "folder")
+                                Label(L.nActive(activeCount), systemImage: "folder")
                                 if archivedCount > 0 {
-                                    Label("\(archivedCount) archived", systemImage: "archivebox")
+                                    Label("\(archivedCount) \(L.archived)", systemImage: "archivebox")
                                         .foregroundColor(AppTheme.textMuted)
                                 }
                             }
@@ -114,7 +114,7 @@ struct DatasetsView: View {
                     HStack(spacing: 8) {
                         Menu {
                             Toggle(isOn: $showArchiveFilter) {
-                                Label("Show Archived (\(archivedCount))", systemImage: "archivebox")
+                                Label("\(L.showArchived) (\(archivedCount))", systemImage: "archivebox")
                             }
                         } label: {
                             Image(systemName: "ellipsis.circle")
@@ -125,14 +125,14 @@ struct DatasetsView: View {
                         .frame(width: 30)
 
                         Button(action: { showCreateWizard = true }) {
-                            Label("Create Dataset", systemImage: "plus")
+                            Label(L.createDataset, systemImage: "plus")
                         }
                         .buttonStyle(.bordered)
 
                         Button(action: { appState.showImportDatasetSheet = true }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "folder.badge.plus")
-                                Text("Import Dataset")
+                                Text(L.importDataset)
                             }
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.white)
@@ -150,7 +150,7 @@ struct DatasetsView: View {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(AppTheme.textMuted)
-                    TextField("Search datasets...", text: $searchText)
+                    TextField(L.searchDatasets, text: $searchText)
                         .textFieldStyle(.plain)
                         .foregroundColor(AppTheme.textPrimary)
                     if !searchText.isEmpty {
@@ -169,16 +169,16 @@ struct DatasetsView: View {
                         .stroke(Color.white.opacity(0.05), lineWidth: 1)
                 )
 
-                Picker("Type", selection: $selectedType) {
-                    Text("All Types").tag(nil as DatasetType?)
+                Picker(L.dataType, selection: $selectedType) {
+                    Text(L.allTypes).tag(nil as DatasetType?)
                     ForEach(DatasetType.allCases, id: \.self) { type in
                         Label(type.rawValue, systemImage: type.icon).tag(type as DatasetType?)
                     }
                 }
                 .frame(width: 140)
 
-                Picker("Status", selection: $selectedStatus) {
-                    Text("All Status").tag(nil as DatasetStatus?)
+                Picker(L.allStatus, selection: $selectedStatus) {
+                    Text(L.allStatus).tag(nil as DatasetStatus?)
                     ForEach(DatasetStatus.allCases, id: \.self) { status in
                         Text(status.rawValue).tag(status as DatasetStatus?)
                     }
@@ -195,9 +195,9 @@ struct DatasetsView: View {
             if filteredDatasets.isEmpty {
                 EmptyStateView(
                     icon: "folder",
-                    title: "No Datasets",
-                    message: searchText.isEmpty ? "Import a dataset to get started" : "No datasets match your search",
-                    actionTitle: searchText.isEmpty ? "Import Dataset" : nil,
+                    title: L.noDatasetsYet,
+                    message: searchText.isEmpty ? L.noDatasetsYet : L.adjustFilters,
+                    actionTitle: searchText.isEmpty ? L.importDataset : nil,
                     action: searchText.isEmpty ? { appState.showImportDatasetSheet = true } : nil
                 )
             } else {
@@ -229,15 +229,15 @@ struct DatasetsView: View {
             handleDrop(providers: providers)
             return true
         }
-        .alert("Delete Dataset", isPresented: $showingDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+        .alert(L.deleteDataset, isPresented: $showingDeleteConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.delete, role: .destructive) {
                 if let dataset = datasetToDelete {
                     Task { await appState.deleteDataset(dataset) }
                 }
             }
         } message: {
-            Text("Are you sure you want to delete '\(datasetToDelete?.name ?? "")'? This will remove the dataset files.")
+            Text(L.confirmDeleteModel(datasetToDelete?.name ?? ""))
         }
         .sheet(isPresented: $showCreateWizard) {
             DatasetCreationWizard()
