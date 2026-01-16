@@ -793,7 +793,7 @@ struct ModernActiveRunCard: View {
                         .font(.caption)
                         .foregroundColor(AppTheme.textMuted)
 
-                    Text("Epoch \(run.currentEpoch)/\(run.totalEpochs)")
+                    Text(L.epochProgress(run.currentEpoch, run.totalEpochs))
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundColor(AppTheme.textSecondary)
                 }
@@ -807,7 +807,7 @@ struct ModernActiveRunCard: View {
                     Text(String(format: "%.4f", loss))
                         .font(.system(size: 14, weight: .medium, design: .monospaced))
                         .foregroundColor(AppTheme.textPrimary)
-                    Text("Loss")
+                    Text(L.loss)
                         .font(.system(size: 10))
                         .foregroundColor(AppTheme.textMuted)
                 }
@@ -915,7 +915,7 @@ struct ModelTemplateCard: View {
                 HStack {
                     Image(systemName: "play.fill")
                         .font(.system(size: 10))
-                    Text("Train")
+                    Text(L.train)
                         .font(.system(size: 11, weight: .medium))
                 }
                 .foregroundColor(.white)
@@ -1000,7 +1000,7 @@ struct HFModelCard: View {
                 Spacer()
 
                 Button(action: { appState.showNewModelSheet = true }) {
-                    Text("Import")
+                    Text(L.importModel)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(AppTheme.primary)
                 }
@@ -1081,7 +1081,7 @@ struct BuiltInDatasetCard: View {
                     HStack(spacing: 4) {
                         Image(systemName: "play.fill")
                             .font(.system(size: 9))
-                        Text("Train")
+                        Text(L.train)
                             .font(.system(size: 11, weight: .medium))
                     }
                     .foregroundColor(.white)
@@ -1297,7 +1297,7 @@ struct ModernAccuracyChart: View {
                 Image(systemName: "chart.bar.xaxis")
                     .font(.system(size: 32))
                     .foregroundColor(AppTheme.textMuted)
-                Text("Complete more runs to see trends")
+                Text(L.completeTrendsMessage)
                     .font(.system(size: 12))
                     .foregroundColor(AppTheme.textMuted)
             }
