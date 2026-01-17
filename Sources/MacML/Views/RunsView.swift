@@ -12,11 +12,20 @@ struct RunsView: View {
     @State private var selectedRuns: Set<String> = []
     @State private var isSelectionMode = false
 
-    enum RunFilter: String, CaseIterable {
-        case all = "All"
-        case active = "Active"
-        case completed = "Completed"
-        case failed = "Failed"
+    enum RunFilter: CaseIterable {
+        case all
+        case active
+        case completed
+        case failed
+
+        var title: String {
+            switch self {
+            case .all: return L.filterAll
+            case .active: return L.filterActive
+            case .completed: return L.filterCompleted
+            case .failed: return L.filterFailed
+            }
+        }
 
         var icon: String {
             switch self {
@@ -179,7 +188,7 @@ struct RunsView: View {
                 HStack(spacing: 4) {
                     ForEach(RunFilter.allCases, id: \.self) { filter in
                         FilterButton(
-                            title: filter.rawValue,
+                            title: filter.title,
                             icon: filter.icon,
                             isSelected: selectedFilter == filter,
                             count: countForFilter(filter)
@@ -273,8 +282,8 @@ struct RunsView: View {
             } else {
                 PlaceholderDetailView(
                     icon: "play.circle",
-                    title: "Select a Training Run",
-                    subtitle: "Choose a run from the list to view details, metrics, and logs"
+                    title: L.selectTrainingRun,
+                    subtitle: L.selectRunSubtitle
                 )
             }
         }
@@ -347,17 +356,17 @@ struct RunsView: View {
 
     private var bulkDeleteAlertTitle: String {
         switch bulkDeleteType {
-        case .failed: return "Delete Failed Runs"
-        case .selected: return "Delete Selected Runs"
-        case .all: return "Delete All Runs"
+        case .failed: return L.deleteFailedRuns
+        case .selected: return L.deleteSelectedRuns
+        case .all: return L.deleteAllRuns
         }
     }
 
     private var bulkDeleteAlertMessage: String {
         switch bulkDeleteType {
-        case .failed: return "Delete all \(failedRunsCount) failed runs? This cannot be undone."
-        case .selected: return "Delete \(selectedRuns.count) selected runs? This cannot be undone."
-        case .all: return "Delete all \(appState.runs.count) runs? This cannot be undone."
+        case .failed: return L.deleteFailedRunsCount(failedRunsCount)
+        case .selected: return L.deleteSelectedRunsCount(selectedRuns.count)
+        case .all: return L.deleteAllRunsCount(appState.runs.count)
         }
     }
 
@@ -477,10 +486,10 @@ struct EmptyRunsView: View {
 
     private var subtitleForFilter: String {
         switch filter {
-        case .all: return "Start a training run to train your models on your datasets"
-        case .active: return "No training is currently running"
-        case .completed: return "Completed runs will appear here"
-        case .failed: return "Great! No failures to report"
+        case .all: return L.startTrainingDescription
+        case .active: return L.noActiveTraining
+        case .completed: return L.completedRunsAppearHere
+        case .failed: return L.noFailuresMessage
         }
     }
 }
@@ -570,7 +579,7 @@ struct RunListItem: View {
                     if run.status == .running || run.status == .paused {
                         Text("•")
                             .foregroundColor(.secondary)
-                        Text("Epoch \(run.currentEpoch)/\(run.totalEpochs)")
+                        Text(L.epochProgress(run.currentEpoch, run.totalEpochs))
                             .font(.caption)
                             .foregroundColor(.orange)
                     }
@@ -614,7 +623,7 @@ struct RunListItem: View {
                         .foregroundColor(.orange)
                 }
                 .buttonStyle(.borderless)
-                .help("Pause training")
+                .help(L.pauseTraining)
             } else if run.status == .paused {
                 Button(action: { appState.resumeTraining(runId: run.id) }) {
                     Image(systemName: "play.fill")
@@ -622,7 +631,7 @@ struct RunListItem: View {
                         .foregroundColor(.green)
                 }
                 .buttonStyle(.borderless)
-                .help("Resume training")
+                .help(L.resumeTraining)
             }
         }
         .padding(.vertical, 6)
@@ -641,10 +650,18 @@ struct RunDetailView: View {
     @State private var showExportSheet = false
     @State private var checkpointPath: String?
 
-    enum DetailTab: String, CaseIterable {
-        case training = "Training"
-        case console = "Console"
-        case config = "Config"
+    enum DetailTab: CaseIterable {
+        case training
+        case console
+        case config
+
+        var title: String {
+            switch self {
+            case .training: return L.tabTraining
+            case .console: return L.tabConsole
+            case .config: return L.tabConfig
+            }
+        }
     }
 
     var isActive: Bool {
@@ -702,11 +719,11 @@ struct RunDetailView: View {
                             .tint(run.status == .paused ? .orange : .accentColor)
 
                         HStack {
-                            Text("Epoch \(run.currentEpoch) of \(run.totalEpochs)")
+                            Text(L.epochOf(run.currentEpoch, run.totalEpochs))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                             Spacer()
-                            Text("\(Int(run.progress * 100))% complete")
+                            Text(L.percentComplete(Int(run.progress * 100)))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -719,7 +736,7 @@ struct RunDetailView: View {
             // Tab selector
             Picker("", selection: $selectedTab) {
                 ForEach(DetailTab.allCases, id: \.self) { tab in
-                    Text(tab.rawValue).tag(tab)
+                    Text(tab.title).tag(tab)
                 }
             }
             .pickerStyle(.segmented)
@@ -738,21 +755,21 @@ struct RunDetailView: View {
             }
         }
         .background(Color(NSColor.windowBackgroundColor))
-        .alert("Stop Training", isPresented: $showCancelConfirmation) {
-            Button("Continue Training", role: .cancel) {}
-            Button("Stop", role: .destructive) {
+        .alert(L.stopTraining, isPresented: $showCancelConfirmation) {
+            Button(L.continueTraining, role: .cancel) {}
+            Button(L.stop, role: .destructive) {
                 appState.cancelTraining(runId: run.id)
             }
         } message: {
-            Text("Are you sure you want to stop this training run? Progress will be lost.")
+            Text(L.confirmStopTraining())
         }
-        .alert("Delete Run", isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+        .alert(L.deleteRun, isPresented: $showDeleteConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.delete, role: .destructive) {
                 Task { await appState.deleteRun(run) }
             }
         } message: {
-            Text("Are you sure you want to delete this run? This cannot be undone.")
+            Text(L.confirmDeleteModel(run.name))
         }
         .sheet(isPresented: $showExportSheet) {
             if let path = checkpointPath {
@@ -769,29 +786,29 @@ struct RunDetailView: View {
     private var actionButtons: some View {
         if run.status == .running {
             Button(action: { appState.pauseTraining(runId: run.id) }) {
-                Label("Pause", systemImage: "pause.fill")
+                Label(L.pause, systemImage: "pause.fill")
             }
             .buttonStyle(.bordered)
 
             Button(action: { showCancelConfirmation = true }) {
-                Label("Stop", systemImage: "stop.fill")
+                Label(L.stop, systemImage: "stop.fill")
             }
             .buttonStyle(.bordered)
             .tint(.red)
         } else if run.status == .paused {
             Button(action: { appState.resumeTraining(runId: run.id) }) {
-                Label("Resume", systemImage: "play.fill")
+                Label(L.resume, systemImage: "play.fill")
             }
             .buttonStyle(.borderedProminent)
 
             Button(action: { showCancelConfirmation = true }) {
-                Label("Stop", systemImage: "stop.fill")
+                Label(L.stop, systemImage: "stop.fill")
             }
             .buttonStyle(.bordered)
             .tint(.red)
         } else if run.status == .completed {
             Button(action: { exportModel() }) {
-                Label("Export", systemImage: "square.and.arrow.up")
+                Label(L.export, systemImage: "square.and.arrow.up")
             }
             .buttonStyle(.bordered)
         }
@@ -850,16 +867,16 @@ struct MetricsTableView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Training History")
+            Text(L.trainingHistory)
                 .font(.headline)
 
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Text("Epoch").frame(width: 60, alignment: .leading)
-                    Text("Loss").frame(width: 80, alignment: .trailing)
-                    Text("Accuracy").frame(width: 80, alignment: .trailing)
-                    Text("Time").frame(maxWidth: .infinity, alignment: .trailing)
+                    Text(L.epoch).frame(width: 60, alignment: .leading)
+                    Text(L.loss).frame(width: 80, alignment: .trailing)
+                    Text(L.accuracy).frame(width: 80, alignment: .trailing)
+                    Text(L.time).frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 .font(.caption)
                 .fontWeight(.medium)
@@ -909,10 +926,10 @@ struct ConsoleTabContent: View {
             HStack {
                 Image(systemName: "terminal.fill")
                     .foregroundColor(.green)
-                Text("Console Output")
+                Text(L.consoleOutput)
                     .font(.headline)
                 Spacer()
-                Text("\(logs.count) entries")
+                Text(L.nEntries(logs.count))
                     .font(.caption)
                     .foregroundColor(.secondary)
 
@@ -920,7 +937,7 @@ struct ConsoleTabContent: View {
                     Image(systemName: "doc.on.doc")
                 }
                 .buttonStyle(.borderless)
-                .help("Copy all logs")
+                .help(L.copyAllLogs)
             }
             .padding()
             .background(Color.black.opacity(0.8))
@@ -948,49 +965,49 @@ struct ConfigTabContent: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                ConfigSection(title: "Model Architecture") {
-                    ConfigRow(label: "Architecture", value: run.architectureType)
+                ConfigSection(title: L.modelArchitecture) {
+                    ConfigRow(label: L.architecture, value: run.architectureType)
                 }
 
-                ConfigSection(title: "Training Configuration") {
-                    ConfigRow(label: "Epochs", value: "\(run.totalEpochs)")
-                    ConfigRow(label: "Batch Size", value: "\(run.batchSize)")
-                    ConfigRow(label: "Learning Rate", value: String(format: "%.6f", run.learningRate))
+                ConfigSection(title: L.trainingConfiguration) {
+                    ConfigRow(label: L.epochs, value: "\(run.totalEpochs)")
+                    ConfigRow(label: L.batchSize, value: "\(run.batchSize)")
+                    ConfigRow(label: L.learningRate, value: String(format: "%.6f", run.learningRate))
                 }
 
-                ConfigSection(title: "Run Information") {
-                    ConfigRow(label: "Run ID", value: String(run.id.prefix(8)) + "...")
-                    ConfigRow(label: "Model", value: run.modelName)
-                    ConfigRow(label: "Started", value: run.startedAt.formatted())
+                ConfigSection(title: L.runInformation) {
+                    ConfigRow(label: L.runId, value: String(run.id.prefix(8)) + "...")
+                    ConfigRow(label: L.model, value: run.modelName)
+                    ConfigRow(label: L.started, value: run.startedAt.formatted())
                     if let finished = run.finishedAt {
-                        ConfigRow(label: "Finished", value: finished.formatted())
+                        ConfigRow(label: L.finished, value: finished.formatted())
                     }
-                    ConfigRow(label: "Status", value: run.status.rawValue)
+                    ConfigRow(label: L.status, value: run.status.rawValue)
                 }
 
                 if run.status == .completed {
-                    ConfigSection(title: "Results") {
+                    ConfigSection(title: L.results) {
                         if let loss = run.loss {
-                            ConfigRow(label: "Final Loss", value: String(format: "%.4f", loss))
+                            ConfigRow(label: L.finalLoss, value: String(format: "%.4f", loss))
                         }
                         if let accuracy = run.accuracy {
-                            ConfigRow(label: "Final Accuracy", value: String(format: "%.2f%%", accuracy * 100))
+                            ConfigRow(label: L.finalAccuracy, value: String(format: "%.2f%%", accuracy * 100))
                         }
-                        ConfigRow(label: "Total Duration", value: run.duration)
+                        ConfigRow(label: L.totalDuration, value: run.duration)
                     }
 
-                    ConfigSection(title: "Extended Metrics") {
+                    ConfigSection(title: L.extendedMetrics) {
                         if let precision = run.precision {
-                            ConfigRow(label: "Precision", value: String(format: "%.2f%%", precision * 100))
+                            ConfigRow(label: L.precision, value: String(format: "%.2f%%", precision * 100))
                         }
                         if let recall = run.recall {
-                            ConfigRow(label: "Recall", value: String(format: "%.2f%%", recall * 100))
+                            ConfigRow(label: L.recall, value: String(format: "%.2f%%", recall * 100))
                         }
                         if let f1Score = run.f1Score {
-                            ConfigRow(label: "F1 Score", value: String(format: "%.2f%%", f1Score * 100))
+                            ConfigRow(label: L.f1Score, value: String(format: "%.2f%%", f1Score * 100))
                         }
                         if run.precision == nil && run.recall == nil && run.f1Score == nil {
-                            Text("Extended metrics not available for this run")
+                            Text(L.extendedMetricsNotAvailable)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -1013,7 +1030,7 @@ struct ConsoleView: View {
                 Image(systemName: "terminal")
                     .font(.system(size: 32))
                     .foregroundColor(.secondary)
-                Text("Waiting for output...")
+                Text(L.waitingForOutput)
                     .font(.system(.body, design: .monospaced))
                     .foregroundColor(.secondary)
             }

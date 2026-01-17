@@ -134,6 +134,63 @@
 "loss" = "損失";
 "accuracy" = "精度";
 "learning_rate" = "学習率";
+"time" = "時間";
+"entries" = "件";
+
+/* Filter labels */
+"filter_all" = "すべて";
+"filter_active" = "アクティブ";
+"filter_completed" = "完了";
+"filter_failed" = "失敗";
+
+/* Tab labels */
+"tab_training" = "学習";
+"tab_console" = "コンソール";
+"tab_config" = "設定";
+
+/* Placeholder */
+"select_training_run" = "学習実行を選択";
+"select_run_subtitle" = "リストから実行を選択して詳細、指標、ログを表示";
+
+/* Bulk delete */
+"delete_failed_runs" = "失敗した実行を削除";
+"delete_selected_runs" = "選択した実行を削除";
+"delete_all_runs" = "すべての実行を削除";
+
+/* Empty states */
+"no_active_training" = "現在実行中の学習はありません";
+"completed_runs_appear_here" = "完了した実行がここに表示されます";
+"no_failures_message" = "失敗はありません";
+"start_training_description" = "データセットでモデルを学習するには学習実行を開始してください";
+
+/* Config sections */
+"training_history" = "学習履歴";
+"console_output" = "コンソール出力";
+"model_architecture" = "モデルアーキテクチャ";
+"training_configuration" = "学習設定";
+"run_information" = "実行情報";
+"results" = "結果";
+"extended_metrics" = "拡張指標";
+"extended_metrics_not_available" = "この実行では拡張指標は利用できません";
+
+/* Config rows */
+"run_id" = "実行ID";
+"started" = "開始";
+"finished" = "終了";
+"status" = "ステータス";
+"final_loss" = "最終損失";
+"final_accuracy" = "最終精度";
+"total_duration" = "合計時間";
+"precision" = "適合率";
+"recall" = "再現率";
+"f1_score" = "F1スコア";
+
+/* Console */
+"waiting_for_output" = "出力を待機中...";
+"copy_all_logs" = "すべてのログをコピー";
+
+/* Progress */
+"complete" = "完了";
 
 /* Datasets View */
 "no_datasets_yet" = "データセットがありません";
@@ -158,6 +215,36 @@
 "no_models_available" = "利用可能なモデルがありません";
 "export_csv" = "CSVで書き出す";
 "export_json" = "JSONで書き出す";
+"select_trained_model" = "学習済みモデルを選択";
+"select_input_image" = "入力画像を選択";
+"select_input_images" = "入力画像を選択";
+"run_prediction" = "予測を実行";
+"run_batch_prediction" = "バッチ予測を実行";
+"running_inference_dots" = "実行中...";
+"run_batch_inference" = "バッチ推論を実行";
+"drop_images_here" = "ここに画像をドロップ、またはクリックして選択";
+"drop_more_images" = "さらに画像をドロップ、またはクリックして追加";
+"selected_images" = "選択された画像";
+"no_trained_models_yet" = "学習済みモデルがありません";
+"train_model_first" = "推論を実行するには、まずモデルを学習してください";
+"output_classes" = "出力クラス";
+"edit_output_classes" = "出力クラスを編集";
+"edit" = "編集";
+"original" = "オリジナル";
+"model_input" = "モデル入力 (28×28)";
+"preview_unavailable" = "プレビュー不可";
+"change" = "変更";
+"drag_drop_image" = "画像をドラッグ＆ドロップ";
+"drop_image_here" = "ここに画像をドロップ";
+"or_click_to_browse" = "またはクリックして選択";
+"browse_files" = "ファイルを選択";
+"results_title" = "結果";
+"no_predictions_yet" = "予測結果がありません";
+"run_inference_to_see_results" = "推論を実行すると結果がここに表示されます";
+"predictions" = "予測";
+"done" = "完了";
+"success" = "成功";
+"images" = "画像";
 
 /* Settings View */
 "general" = "一般";
@@ -262,3 +349,24 @@
 "runs_deleted %lld" = "%lld件の実行を削除しました";
 "delete_selected %lld" = "選択した%lld件を削除";
 "view_all_active_runs %lld" = "すべての%lld件のアクティブな実行を表示";
+"epoch_of %lld %lld" = "エポック %lld / %lld";
+"percent_complete %lld" = "%lld%% 完了";
+"delete_failed_runs_count %lld" = "失敗した%lld件の実行をすべて削除しますか？この操作は元に戻せません。";
+"delete_selected_runs_count %lld" = "選択した%lld件の実行を削除しますか？この操作は元に戻せません。";
+"delete_all_runs_count %lld" = "すべての%lld件の実行を削除しますか？この操作は元に戻せません。";
+"n_entries %lld" = "%lld件";
+"n_more %lld" = "+%lld件";
+"created_date %@" = "作成日: %@";
+"updated_date %@" = "更新日: %@";
+"drop_folder_containing_images" = "クラスごとに整理された画像を含むフォルダをドロップ";
+"processing_percent %lld" = "処理中 %lld%%...";
+"n_images %lld" = "%lld枚の画像";
+"n_predictions %lld" = "%lld件の予測";
+"n_success %lld" = "%lld件成功";
+"n_failed %lld" = "%lld件失敗";
+"n_total %lld" = "%lld件";
+"using_model %@" = "%@を使用";
+"n_images_with_model %lld %@" = "%lld枚の画像 • %@";
+"n_output_classes %lld" = "出力クラス (%lld)";
+"class_index %lld" = "クラス %lld:";
+"n_completed_runs %lld" = "%lld件の完了した学習実行がありますが、モデルはまだ登録されていません。";

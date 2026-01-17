@@ -140,6 +140,63 @@ enum L {
     static var loss: String { String(localized: "loss", bundle: .module) }
     static var accuracy: String { String(localized: "accuracy", bundle: .module) }
     static var learningRate: String { String(localized: "learning_rate", bundle: .module) }
+    static var time: String { String(localized: "time", bundle: .module) }
+    static var entries: String { String(localized: "entries", bundle: .module) }
+
+    // Filter labels
+    static var filterAll: String { String(localized: "filter_all", bundle: .module) }
+    static var filterActive: String { String(localized: "filter_active", bundle: .module) }
+    static var filterCompleted: String { String(localized: "filter_completed", bundle: .module) }
+    static var filterFailed: String { String(localized: "filter_failed", bundle: .module) }
+
+    // Tab labels
+    static var tabTraining: String { String(localized: "tab_training", bundle: .module) }
+    static var tabConsole: String { String(localized: "tab_console", bundle: .module) }
+    static var tabConfig: String { String(localized: "tab_config", bundle: .module) }
+
+    // Placeholder
+    static var selectTrainingRun: String { String(localized: "select_training_run", bundle: .module) }
+    static var selectRunSubtitle: String { String(localized: "select_run_subtitle", bundle: .module) }
+
+    // Bulk delete
+    static var deleteFailedRuns: String { String(localized: "delete_failed_runs", bundle: .module) }
+    static var deleteSelectedRuns: String { String(localized: "delete_selected_runs", bundle: .module) }
+    static var deleteAllRuns: String { String(localized: "delete_all_runs", bundle: .module) }
+
+    // Empty states
+    static var noActiveTraining: String { String(localized: "no_active_training", bundle: .module) }
+    static var completedRunsAppearHere: String { String(localized: "completed_runs_appear_here", bundle: .module) }
+    static var noFailuresMessage: String { String(localized: "no_failures_message", bundle: .module) }
+    static var startTrainingDescription: String { String(localized: "start_training_description", bundle: .module) }
+
+    // Config sections
+    static var trainingHistory: String { String(localized: "training_history", bundle: .module) }
+    static var consoleOutput: String { String(localized: "console_output", bundle: .module) }
+    static var modelArchitecture: String { String(localized: "model_architecture", bundle: .module) }
+    static var trainingConfiguration: String { String(localized: "training_configuration", bundle: .module) }
+    static var runInformation: String { String(localized: "run_information", bundle: .module) }
+    static var results: String { String(localized: "results", bundle: .module) }
+    static var extendedMetrics: String { String(localized: "extended_metrics", bundle: .module) }
+    static var extendedMetricsNotAvailable: String { String(localized: "extended_metrics_not_available", bundle: .module) }
+
+    // Config rows
+    static var runId: String { String(localized: "run_id", bundle: .module) }
+    static var started: String { String(localized: "started", bundle: .module) }
+    static var finished: String { String(localized: "finished", bundle: .module) }
+    static var status: String { String(localized: "status", bundle: .module) }
+    static var finalLoss: String { String(localized: "final_loss", bundle: .module) }
+    static var finalAccuracy: String { String(localized: "final_accuracy", bundle: .module) }
+    static var totalDuration: String { String(localized: "total_duration", bundle: .module) }
+    static var precision: String { String(localized: "precision", bundle: .module) }
+    static var recall: String { String(localized: "recall", bundle: .module) }
+    static var f1Score: String { String(localized: "f1_score", bundle: .module) }
+
+    // Console
+    static var waitingForOutput: String { String(localized: "waiting_for_output", bundle: .module) }
+    static var copyAllLogs: String { String(localized: "copy_all_logs", bundle: .module) }
+
+    // Progress
+    static var complete: String { String(localized: "complete", bundle: .module) }
 
     // MARK: - Datasets View
     static var noDatasetsYet: String { String(localized: "no_datasets_yet", bundle: .module) }
@@ -153,6 +210,7 @@ enum L {
     static var createDataset: String { String(localized: "create_dataset", bundle: .module) }
     static var copyDatasetId: String { String(localized: "copy_dataset_id", bundle: .module) }
     static var showInFinder: String { String(localized: "show_in_finder", bundle: .module) }
+    static var dropFolderContainingImages: String { String(localized: "drop_folder_containing_images", bundle: .module) }
 
     // MARK: - Inference View
     static var selectModel: String { String(localized: "select_model", bundle: .module) }
@@ -164,6 +222,36 @@ enum L {
     static var noModelsAvailable: String { String(localized: "no_models_available", bundle: .module) }
     static var exportCSV: String { String(localized: "export_csv", bundle: .module) }
     static var exportJSON: String { String(localized: "export_json", bundle: .module) }
+    static var selectTrainedModel: String { String(localized: "select_trained_model", bundle: .module) }
+    static var selectInputImage: String { String(localized: "select_input_image", bundle: .module) }
+    static var selectInputImages: String { String(localized: "select_input_images", bundle: .module) }
+    static var runPrediction: String { String(localized: "run_prediction", bundle: .module) }
+    static var runBatchPrediction: String { String(localized: "run_batch_prediction", bundle: .module) }
+    static var runningInferenceDots: String { String(localized: "running_inference_dots", bundle: .module) }
+    static var runBatchInference: String { String(localized: "run_batch_inference", bundle: .module) }
+    static var dropImagesHere: String { String(localized: "drop_images_here", bundle: .module) }
+    static var dropMoreImages: String { String(localized: "drop_more_images", bundle: .module) }
+    static var selectedImages: String { String(localized: "selected_images", bundle: .module) }
+    static var noTrainedModelsYet: String { String(localized: "no_trained_models_yet", bundle: .module) }
+    static var trainModelFirst: String { String(localized: "train_model_first", bundle: .module) }
+    static var outputClasses: String { String(localized: "output_classes", bundle: .module) }
+    static var editOutputClasses: String { String(localized: "edit_output_classes", bundle: .module) }
+    static var edit: String { String(localized: "edit", bundle: .module) }
+    static var original: String { String(localized: "original", bundle: .module) }
+    static var modelInput: String { String(localized: "model_input", bundle: .module) }
+    static var previewUnavailable: String { String(localized: "preview_unavailable", bundle: .module) }
+    static var change: String { String(localized: "change", bundle: .module) }
+    static var dragDropImage: String { String(localized: "drag_drop_image", bundle: .module) }
+    static var dropImageHere: String { String(localized: "drop_image_here", bundle: .module) }
+    static var orClickToBrowse: String { String(localized: "or_click_to_browse", bundle: .module) }
+    static var browseFiles: String { String(localized: "browse_files", bundle: .module) }
+    static var resultsTitle: String { String(localized: "results_title", bundle: .module) }
+    static var noPredictionsYet: String { String(localized: "no_predictions_yet", bundle: .module) }
+    static var runInferenceToSeeResults: String { String(localized: "run_inference_to_see_results", bundle: .module) }
+    static var predictions: String { String(localized: "predictions", bundle: .module) }
+    static var done: String { String(localized: "done", bundle: .module) }
+    static var success: String { String(localized: "success", bundle: .module) }
+    static var images: String { String(localized: "images", bundle: .module) }
 
     // MARK: - Settings View
     static var general: String { String(localized: "general", bundle: .module) }
@@ -305,5 +393,85 @@ enum L {
 
     static func viewAllActiveRuns(_ count: Int) -> String {
         String(localized: "view_all_active_runs \(count)", bundle: .module)
+    }
+
+    static func epochOf(_ current: Int, _ total: Int) -> String {
+        String(localized: "epoch_of \(current) \(total)", bundle: .module)
+    }
+
+    static func percentComplete(_ percent: Int) -> String {
+        String(localized: "percent_complete \(percent)", bundle: .module)
+    }
+
+    static func deleteFailedRunsCount(_ count: Int) -> String {
+        String(localized: "delete_failed_runs_count \(count)", bundle: .module)
+    }
+
+    static func deleteSelectedRunsCount(_ count: Int) -> String {
+        String(localized: "delete_selected_runs_count \(count)", bundle: .module)
+    }
+
+    static func deleteAllRunsCount(_ count: Int) -> String {
+        String(localized: "delete_all_runs_count \(count)", bundle: .module)
+    }
+
+    static func nEntries(_ count: Int) -> String {
+        String(localized: "n_entries \(count)", bundle: .module)
+    }
+
+    static func nMore(_ count: Int) -> String {
+        String(localized: "n_more \(count)", bundle: .module)
+    }
+
+    static func createdDate(_ date: String) -> String {
+        String(localized: "created_date \(date)", bundle: .module)
+    }
+
+    static func updatedDate(_ date: String) -> String {
+        String(localized: "updated_date \(date)", bundle: .module)
+    }
+
+    static func processingPercent(_ percent: Int) -> String {
+        String(localized: "processing_percent \(percent)", bundle: .module)
+    }
+
+    static func nImages(_ count: Int) -> String {
+        String(localized: "n_images \(count)", bundle: .module)
+    }
+
+    static func nPredictions(_ count: Int) -> String {
+        String(localized: "n_predictions \(count)", bundle: .module)
+    }
+
+    static func nSuccess(_ count: Int) -> String {
+        String(localized: "n_success \(count)", bundle: .module)
+    }
+
+    static func nFailed(_ count: Int) -> String {
+        String(localized: "n_failed \(count)", bundle: .module)
+    }
+
+    static func nTotal(_ count: Int) -> String {
+        String(localized: "n_total \(count)", bundle: .module)
+    }
+
+    static func usingModel(_ name: String) -> String {
+        String(localized: "using_model \(name)", bundle: .module)
+    }
+
+    static func nImagesWithModel(_ count: Int, _ name: String) -> String {
+        String(localized: "n_images_with_model \(count) \(name)", bundle: .module)
+    }
+
+    static func nOutputClasses(_ count: Int) -> String {
+        String(localized: "n_output_classes \(count)", bundle: .module)
+    }
+
+    static func classIndex(_ index: Int) -> String {
+        String(localized: "class_index \(index)", bundle: .module)
+    }
+
+    static func nCompletedRuns(_ count: Int) -> String {
+        String(localized: "n_completed_runs \(count)", bundle: .module)
     }
 }

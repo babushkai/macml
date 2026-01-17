@@ -282,14 +282,14 @@ struct DatasetCard: View {
 
                 Menu {
                     Button(action: { openInFinder() }) {
-                        Label("Show in Finder", systemImage: "folder")
+                        Label(L.showInFinder, systemImage: "folder")
                     }
 
                     Button {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(dataset.id, forType: .string)
                     } label: {
-                        Label("Copy Dataset ID", systemImage: "doc.on.doc")
+                        Label(L.copyDatasetId, systemImage: "doc.on.doc")
                     }
 
                     Divider()
@@ -299,13 +299,13 @@ struct DatasetCard: View {
                         Button {
                             Task { await appState.updateDatasetStatus(dataset.id, status: .active) }
                         } label: {
-                            Label("Restore", systemImage: "arrow.uturn.backward")
+                            Label(L.restore, systemImage: "arrow.uturn.backward")
                         }
                     } else if dataset.status != .deprecated {
                         Button {
                             Task { await appState.updateDatasetStatus(dataset.id, status: .archived) }
                         } label: {
-                            Label("Archive", systemImage: "archivebox")
+                            Label(L.archive, systemImage: "archivebox")
                         }
                     }
 
@@ -314,20 +314,20 @@ struct DatasetCard: View {
                         Button {
                             Task { await appState.updateDatasetStatus(dataset.id, status: .active) }
                         } label: {
-                            Label("Undeprecate", systemImage: "arrow.uturn.backward")
+                            Label(L.undeprecate, systemImage: "arrow.uturn.backward")
                         }
                     } else if dataset.status != .archived {
                         Button {
                             Task { await appState.updateDatasetStatus(dataset.id, status: .deprecated) }
                         } label: {
-                            Label("Mark Deprecated", systemImage: "exclamationmark.triangle")
+                            Label(L.markDeprecated, systemImage: "exclamationmark.triangle")
                         }
                     }
 
                     Divider()
 
                     Button(role: .destructive, action: onDelete) {
-                        Label("Delete", systemImage: "trash")
+                        Label(L.delete, systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -347,17 +347,17 @@ struct DatasetCard: View {
 
             // Stats
             HStack(spacing: 16) {
-                DatasetStat(icon: "doc.on.doc", value: "\(dataset.sampleCount)", label: "Samples")
-                DatasetStat(icon: "internaldrive", value: formatBytes(dataset.size), label: "Size")
+                DatasetStat(icon: "doc.on.doc", value: "\(dataset.sampleCount)", label: L.samples)
+                DatasetStat(icon: "internaldrive", value: formatBytes(dataset.size), label: L.size)
                 if !dataset.classes.isEmpty {
-                    DatasetStat(icon: "tag", value: "\(dataset.classes.count)", label: "Classes")
+                    DatasetStat(icon: "tag", value: "\(dataset.classes.count)", label: L.classes)
                 }
             }
 
             // Classes (if available)
             if !dataset.classes.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Classes")
+                    Text(L.classes)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -371,7 +371,7 @@ struct DatasetCard: View {
                                     .cornerRadius(4)
                             }
                             if dataset.classes.count > 10 {
-                                Text("+\(dataset.classes.count - 10) more")
+                                Text(L.nMore(dataset.classes.count - 10))
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
@@ -382,12 +382,12 @@ struct DatasetCard: View {
 
             // Footer
             HStack {
-                Text("Created \(dataset.createdAt.formatted(date: .abbreviated, time: .omitted))")
+                Text(L.createdDate(dataset.createdAt.formatted(date: .abbreviated, time: .omitted)))
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 Spacer()
                 if dataset.updatedAt != dataset.createdAt {
-                    Text("Updated \(dataset.updatedAt.formatted(date: .abbreviated, time: .omitted))")
+                    Text(L.updatedDate(dataset.updatedAt.formatted(date: .abbreviated, time: .omitted)))
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -452,12 +452,12 @@ struct DatasetDropZone: View {
                     .font(.system(size: 64))
                     .foregroundColor(.white)
 
-                Text("Drop Folder to Import Dataset")
+                Text(L.dropFolder)
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
 
-                Text("Drop a folder containing images organized by class")
+                Text(L.dropFolderContainingImages)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.8))
             }
