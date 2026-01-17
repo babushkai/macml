@@ -97,7 +97,8 @@ struct SidebarView: View {
                         Text(L.noModelsYet)
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            .padding(.leading, 4)
+                            .padding(.leading, 8)
+                            .padding(.vertical, 4)
                     }
                 } label: {
                     Button {
@@ -147,7 +148,8 @@ struct SidebarView: View {
                         Text(L.noTrainingRunsYet)
                             .font(.caption)
                             .foregroundColor(.secondary)
-                            .padding(.leading, 4)
+                            .padding(.leading, 8)
+                            .padding(.vertical, 4)
                     }
                 } label: {
                     Button {
@@ -181,9 +183,24 @@ struct SidebarView: View {
             }
 
             Section(L.distillation) {
-                Label(NavigationTab.distillation.localizedName, systemImage: NavigationTab.distillation.icon)
-                    .tag(NavigationTab.distillation)
-                    .badge(appState.activeDistillations.count)
+                Button {
+                    appState.selectedTab = .distillation
+                } label: {
+                    HStack {
+                        Label(NavigationTab.distillation.localizedName, systemImage: NavigationTab.distillation.icon)
+                        Spacer()
+                        if appState.activeDistillations.count > 0 {
+                            Text("\(appState.activeDistillations.count)")
+                                .font(.caption)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.accentColor)
+                                .foregroundColor(.white)
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
             }
 
             Section(L.metrics) {
@@ -197,7 +214,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
-        .frame(minWidth: 220)
+        .frame(minWidth: 260)
         .toolbar {
             ToolbarItemGroup {
                 Menu {
@@ -247,8 +264,9 @@ struct SidebarModelRow: View {
 
             Spacer()
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 6)
         .padding(.leading, 8)
+        .contentShape(Rectangle())
         .contextMenu {
             Button {
                 appState.selectedModelId = model.id
@@ -363,8 +381,9 @@ struct SidebarRunRow: View {
 
             Spacer()
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 6)
         .padding(.leading, 8)
+        .contentShape(Rectangle())
         .contextMenu {
             if run.status == .running {
                 Button {

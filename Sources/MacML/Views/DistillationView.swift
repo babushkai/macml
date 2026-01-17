@@ -5,66 +5,39 @@ struct DistillationView: View {
     @State private var selectedRunId: String?
 
     var body: some View {
-        HSplitView {
-            // Run list
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Text(L.distillationRuns)
-                        .font(.headline)
-                    Spacer()
-                    Button(action: { appState.showNewDistillationSheet = true }) {
-                        Image(systemName: "plus")
-                    }
-                    .buttonStyle(.borderless)
-                }
-                .padding()
+        VStack(spacing: 20) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 60))
+                .foregroundColor(.accentColor)
 
-                Divider()
+            Text(L.distillation)
+                .font(.largeTitle.bold())
 
-                if appState.distillationRuns.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 40))
-                            .foregroundColor(.secondary)
-                        Text(L.noDistillationRuns)
-                            .font(.headline)
-                        Text(L.distillationDescription)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                        Button(L.newDistillation) {
-                            appState.showNewDistillationSheet = true
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding()
-                } else {
-                    List(appState.distillationRuns, selection: $selectedRunId) { run in
-                        DistillationRunRow(run: run)
-                            .tag(run.id)
-                    }
-                }
+            Text(L.distillationDescription)
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+
+            Button(action: { appState.showNewDistillationSheet = true }) {
+                Label(L.newDistillation, systemImage: "plus")
             }
-            .frame(minWidth: 250, maxWidth: 350)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
 
-            // Detail view
-            if let runId = selectedRunId,
-               let run = appState.distillationRuns.first(where: { $0.id == runId }) {
-                DistillationDetailView(run: run)
-            } else {
-                VStack {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 60))
-                        .foregroundColor(.secondary)
-                    Text(L.selectDistillationRun)
-                        .font(.title2)
-                        .foregroundColor(.secondary)
+            if !appState.distillationRuns.isEmpty {
+                Divider()
+                    .padding(.vertical)
+
+                List(appState.distillationRuns, selection: $selectedRunId) { run in
+                    DistillationRunRow(run: run)
+                        .tag(run.id)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxHeight: 300)
             }
         }
-        .frame(minWidth: 600, minHeight: 400)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
     }
 }
 

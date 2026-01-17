@@ -50,23 +50,21 @@ struct DistillationWizard: View {
             Divider()
 
             // Content
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    switch currentStep {
-                    case 0:
-                        TaskStepView(config: $config, runName: $runName)
-                    case 1:
-                        TeacherStepView(config: $config)
-                    case 2:
-                        StudentStepView(config: $config)
-                    case 3:
-                        ReviewStepView(config: config, runName: runName)
-                    default:
-                        EmptyView()
-                    }
+            Form {
+                switch currentStep {
+                case 0:
+                    TaskStepView(config: $config, runName: $runName)
+                case 1:
+                    TeacherStepView(config: $config)
+                case 2:
+                    StudentStepView(config: $config)
+                case 3:
+                    ReviewStepView(config: config, runName: runName)
+                default:
+                    EmptyView()
                 }
-                .padding()
             }
+            .formStyle(.grouped)
 
             Divider()
 
@@ -131,6 +129,7 @@ struct DistillationWizard: View {
 struct TaskStepView: View {
     @Binding var config: DistillationConfig
     @Binding var runName: String
+    @FocusState private var isRunNameFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -142,12 +141,22 @@ struct TaskStepView: View {
 
             TextField("Run Name", text: $runName)
                 .textFieldStyle(.roundedBorder)
+                .focused($isRunNameFocused)
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        isRunNameFocused = true
+                    }
+                }
 
             Text("Task Description")
                 .font(.subheadline.bold())
 
             TextEditor(text: $config.taskDescription)
                 .frame(height: 120)
+                .font(.body)
+                .scrollContentBackground(.hidden)
+                .background(Color(NSColor.textBackgroundColor))
+                .cornerRadius(8)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
