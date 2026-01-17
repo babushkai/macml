@@ -5,11 +5,17 @@ All notable changes to MacML will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.2] - 2026-01-17
+## [0.2.0] - 2026-01-17
 
 ### ⚙️ Miscellaneous
 
 - Bump version to 0.1.2 [skip ci]
+
+- Merge main into feat/japanese-localization
+
+- Add merge as allowed commit type in commitlint
+
+- Bump version to 0.2.0 [skip ci]
 
 
 ### 🐛 Bug Fixes
@@ -17,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Resolve Task type mismatch in DistillationService
 
 - Remove duplicate StepIndicator and use existing one
+
+
+### 📚 Documentation
+
+- Update CHANGELOG.md for v0.1.2 [skip ci]
 
 
 ### 🔨 Refactoring
@@ -28,11 +39,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add knowledge distillation feature
 
+- Add language switch setting in Settings view
+
 ## [0.1.1] - 2026-01-16
 
-### ⚙️ Miscellaneous
+### Merge
 
-- Add dev build for preview
+- Resolve conflict with main branch
+
+
+### ⚙️ Miscellaneous
 
 - Add Dependabot auto-merge for patch updates
 
@@ -42,10 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ### ⚡ Performance
-
-- **ci:** Optimize test and build times
-
-- **ci:** Major optimization - parallel jobs, ubuntu for security
 
 - **ci:** Skip CI for docs, use docker swiftlint, conditional build
 
@@ -66,11 +78,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🚀 Features
 
-- Add Japanese localization support
-
 - Add categorized release notes and version constant
 
 - Add commitlint for conventional commit enforcement
+
+- Localize RunsView, DatasetsView, and InferenceView
+
+- Complete Japanese localization for RunsView, DatasetsView, and InferenceView
 
 
 ### 🧪 Testing
@@ -81,21 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### ⚙️ Miscellaneous
 
-- Enhance CI workflow with coverage, security scans, and multi-Xcode testing
-
 - Bump version to 0.1.0 [skip ci]
-
-
-### 🐛 Bug Fixes
-
-- **ci:** Use Xcode 16.2, remove strict lint mode, simplify test matrix
-
-- **ci:** Relax SwiftLint rules and make lint non-blocking
-
-
-### 🚀 Features
-
-- Add code quality infrastructure and ViewModels
 
 ## [0.0.0-preview-ja] - 2026-01-16
 
@@ -103,12 +103,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bump version to 1.4.2 [skip ci]
 
+- Enhance CI workflow with coverage, security scans, and multi-Xcode testing
+
+- Add dev build for preview
+
+
+### ⚡ Performance
+
+- **ci:** Optimize test and build times
+
+- **ci:** Major optimization - parallel jobs, ubuntu for security
+
 
 ### 🐛 Bug Fixes
 
 - Use two-step image preprocessing to match inference pipeline (#29)
 
 - Update build.yml and add test directory
+
+- **ci:** Use Xcode 16.2, remove strict lint mode, simplify test matrix
+
+- **ci:** Relax SwiftLint rules and make lint non-blocking
+
+- Add CFBundleLocalizations for Japanese support
 
 
 ### 🔨 Refactoring
@@ -119,6 +136,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🚀 Features
 
 - Add comprehensive MLOps features for end-to-end workflow
+
+- Add code quality infrastructure and ViewModels
+
+- Add Japanese localization support
+
+- Add commitlint for conventional commit enforcement
+
+- Localize DashboardView and ModelsView with Japanese translations
+
+- Partial localization of RunsView header
 
 ## [1.4.1] - 2026-01-01
 
