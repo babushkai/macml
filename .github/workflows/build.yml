@@ -80,7 +80,6 @@ jobs:
     name: Build
     runs-on: macos-14
     needs: [test]
-    if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'build')
     steps:
       - uses: actions/checkout@v4
 
