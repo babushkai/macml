@@ -183,9 +183,24 @@ struct SidebarView: View {
             }
 
             Section(L.distillation) {
-                Label(NavigationTab.distillation.localizedName, systemImage: NavigationTab.distillation.icon)
-                    .tag(NavigationTab.distillation)
-                    .badge(appState.activeDistillations.count)
+                Button {
+                    appState.selectedTab = .distillation
+                } label: {
+                    HStack {
+                        Label(NavigationTab.distillation.localizedName, systemImage: NavigationTab.distillation.icon)
+                        Spacer()
+                        if appState.activeDistillations.count > 0 {
+                            Text("\(appState.activeDistillations.count)")
+                                .font(.caption)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.accentColor)
+                                .foregroundColor(.white)
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
             }
 
             Section(L.metrics) {
