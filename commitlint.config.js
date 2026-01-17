@@ -22,6 +22,7 @@ module.exports = {
         'chore',    // Other changes (maintenance)
         'revert',   // Revert a previous commit
         'breaking', // Breaking change (triggers major version)
+        'merge',    // Merge commits
       ],
     ],
     // Type must be lowercase
