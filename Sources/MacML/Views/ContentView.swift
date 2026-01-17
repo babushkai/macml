@@ -180,7 +180,7 @@ struct SidebarView: View {
                     .tag(NavigationTab.inference)
             }
 
-            Section("Distillation") {
+            Section(L.distillation) {
                 Label(NavigationTab.distillation.localizedName, systemImage: NavigationTab.distillation.icon)
                     .tag(NavigationTab.distillation)
                     .badge(appState.activeDistillations.count)
@@ -212,7 +212,7 @@ struct SidebarView: View {
                     }
                     Divider()
                     Button(action: { appState.showNewDistillationSheet = true }) {
-                        Label("New Distillation", systemImage: "sparkles")
+                        Label(L.newDistillation, systemImage: "sparkles")
                     }
                 } label: {
                     Image(systemName: "plus")

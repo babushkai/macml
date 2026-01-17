@@ -9,7 +9,7 @@ struct DistillationView: View {
             // Run list
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text("Distillation Runs")
+                    Text(L.distillationRuns)
                         .font(.headline)
                     Spacer()
                     Button(action: { appState.showNewDistillationSheet = true }) {
@@ -26,13 +26,13 @@ struct DistillationView: View {
                         Image(systemName: "sparkles")
                             .font(.system(size: 40))
                             .foregroundColor(.secondary)
-                        Text("No Distillation Runs")
+                        Text(L.noDistillationRuns)
                             .font(.headline)
-                        Text("Create a new distillation to train a small local model from a cloud LLM")
+                        Text(L.distillationDescription)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
-                        Button("New Distillation") {
+                        Button(L.newDistillation) {
                             appState.showNewDistillationSheet = true
                         }
                         .buttonStyle(.borderedProminent)
@@ -57,13 +57,14 @@ struct DistillationView: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 60))
                         .foregroundColor(.secondary)
-                    Text("Select a distillation run")
+                    Text(L.selectDistillationRun)
                         .font(.title2)
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .frame(minWidth: 600, minHeight: 400)
     }
 }
 
@@ -128,7 +129,7 @@ struct DistillationDetailView: View {
                     }
                     Spacer()
                     if run.status.isActive {
-                        Button("Cancel") {
+                        Button(L.cancel) {
                             appState.cancelDistillation(runId: run.id)
                         }
                         .buttonStyle(.bordered)
@@ -139,7 +140,7 @@ struct DistillationDetailView: View {
                 if run.status.isActive {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Progress")
+                            Text(L.progress)
                                 .font(.headline)
                             Spacer()
                             Text("\(Int(run.progress * 100))%")
@@ -154,34 +155,34 @@ struct DistillationDetailView: View {
 
                 // Stats
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    DistillationStatBox(title: "Samples Generated", value: "\(run.samplesGenerated)", icon: "doc.text")
-                    DistillationStatBox(title: "API Calls", value: "\(run.apiCallsMade)", icon: "network")
-                    DistillationStatBox(title: "Est. Cost", value: String(format: "$%.2f", run.estimatedCost), icon: "dollarsign.circle")
+                    DistillationStatBox(title: L.samplesGenerated, value: "\(run.samplesGenerated)", icon: "doc.text")
+                    DistillationStatBox(title: L.apiCalls, value: "\(run.apiCallsMade)", icon: "network")
+                    DistillationStatBox(title: L.estimatedCost, value: String(format: "$%.2f", run.estimatedCost), icon: "dollarsign.circle")
                     if let studentAcc = run.studentAccuracy {
-                        DistillationStatBox(title: "Student Accuracy", value: String(format: "%.1f%%", studentAcc * 100), icon: "target")
+                        DistillationStatBox(title: L.studentAccuracy, value: String(format: "%.1f%%", studentAcc * 100), icon: "target")
                     }
                     if let compression = run.compressionRatio {
-                        DistillationStatBox(title: "Compression", value: String(format: "%.1fx", compression), icon: "arrow.down.right.and.arrow.up.left")
+                        DistillationStatBox(title: L.compressionRatio, value: String(format: "%.1fx", compression), icon: "arrow.down.right.and.arrow.up.left")
                     }
-                    DistillationStatBox(title: "Duration", value: run.duration, icon: "clock")
+                    DistillationStatBox(title: L.duration, value: run.duration, icon: "clock")
                 }
 
                 // Configuration
-                GroupBox("Configuration") {
+                GroupBox(L.configuration) {
                     VStack(alignment: .leading, spacing: 8) {
-                        LabeledContent("Teacher", value: run.config.teacherType.rawValue)
+                        LabeledContent(L.teacher, value: run.config.teacherType.rawValue)
                         if let provider = run.config.cloudProvider {
-                            LabeledContent("Provider", value: provider.rawValue)
+                            LabeledContent(L.provider, value: provider.rawValue)
                         }
-                        LabeledContent("Student Architecture", value: run.config.studentArchitecture.rawValue)
-                        LabeledContent("Epochs", value: "\(run.config.epochs)")
+                        LabeledContent(L.studentArchitecture, value: run.config.studentArchitecture.rawValue)
+                        LabeledContent(L.epochs, value: "\(run.config.epochs)")
                     }
                 }
 
                 // Logs
-                GroupBox("Logs") {
+                GroupBox(L.logs) {
                     if run.logs.isEmpty {
-                        Text("No logs yet")
+                        Text(L.noLogsYet)
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding()

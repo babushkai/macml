@@ -2,7 +2,7 @@ import SwiftUI
 
 /// System status panel showing GPU, memory, and Python environment status
 struct SystemStatusView: View {
-    @StateObject private var monitor = SystemMonitorService.shared
+    @ObservedObject private var monitor = SystemMonitorService.shared
     @State private var pythonStatus: PythonEnvironmentManager.Status = .notChecked
     @State private var pythonVersion: String?
     @State private var isCheckingPython = false
@@ -290,7 +290,7 @@ struct MetricRow: View {
 // MARK: - Compact Status Indicator
 
 struct CompactSystemStatus: View {
-    @StateObject private var monitor = SystemMonitorService.shared
+    @ObservedObject private var monitor = SystemMonitorService.shared
 
     var body: some View {
         HStack(spacing: 12) {

@@ -651,4 +651,49 @@ enum L {
     static func alphaValue(_ value: Double) -> String {
         String(localized: "alpha_value \(String(format: "%.2f", value))", bundle: .module)
     }
+
+    // MARK: - Distillation
+    static var distillation: String { String(localized: "distillation", bundle: .module) }
+    static var distillationRuns: String { String(localized: "distillation_runs", bundle: .module) }
+    static var noDistillationRuns: String { String(localized: "no_distillation_runs", bundle: .module) }
+    static var distillationDescription: String { String(localized: "distillation_description", bundle: .module) }
+    static var newDistillation: String { String(localized: "new_distillation", bundle: .module) }
+    static var selectDistillationRun: String { String(localized: "select_distillation_run", bundle: .module) }
+    static var generatingData: String { String(localized: "generating_data", bundle: .module) }
+    static var evaluating: String { String(localized: "evaluating", bundle: .module) }
+    static var samplesGenerated: String { String(localized: "samples_generated", bundle: .module) }
+    static var apiCalls: String { String(localized: "api_calls", bundle: .module) }
+    static var estimatedCost: String { String(localized: "estimated_cost", bundle: .module) }
+    static var studentAccuracy: String { String(localized: "student_accuracy", bundle: .module) }
+    static var compressionRatio: String { String(localized: "compression_ratio", bundle: .module) }
+    static var teacher: String { String(localized: "teacher", bundle: .module) }
+    static var provider: String { String(localized: "provider", bundle: .module) }
+    static var studentArchitecture: String { String(localized: "student_architecture", bundle: .module) }
+    static var noLogsYet: String { String(localized: "no_logs_yet", bundle: .module) }
+    static var logs: String { String(localized: "logs", bundle: .module) }
+    static var defineYourTask: String { String(localized: "define_your_task", bundle: .module) }
+    static var taskDescriptionHint: String { String(localized: "task_description_hint", bundle: .module) }
+    static var runName: String { String(localized: "run_name", bundle: .module) }
+    static var taskDescriptionLabel: String { String(localized: "task_description_label", bundle: .module) }
+    static var taskExample: String { String(localized: "task_example", bundle: .module) }
+    static var selectTeacherModel: String { String(localized: "select_teacher_model", bundle: .module) }
+    static var teacherModelHint: String { String(localized: "teacher_model_hint", bundle: .module) }
+    static var cloudProvider: String { String(localized: "cloud_provider", bundle: .module) }
+    static var configureStudentModel: String { String(localized: "configure_student_model", bundle: .module) }
+    static var studentModelHint: String { String(localized: "student_model_hint", bundle: .module) }
+    static var architecture: String { String(localized: "architecture", bundle: .module) }
+    static var trainingParameters: String { String(localized: "training_parameters", bundle: .module) }
+    static var syntheticSamples: String { String(localized: "synthetic_samples", bundle: .module) }
+    static var reviewConfiguration: String { String(localized: "review_configuration", bundle: .module) }
+    static var reviewConfigHint: String { String(localized: "review_config_hint", bundle: .module) }
+    static var general: String { String(localized: "general", bundle: .module) }
+    static var task: String { String(localized: "task", bundle: .module) }
+    static var teacherModel: String { String(localized: "teacher_model", bundle: .module) }
+    static var studentModel: String { String(localized: "student_model", bundle: .module) }
+    static var estimatedApiCost: String { String(localized: "estimated_api_cost", bundle: .module) }
+    static var startDistillation: String { String(localized: "start_distillation", bundle: .module) }
+    static var back: String { String(localized: "back", bundle: .module) }
+    static var next: String { String(localized: "next", bundle: .module) }
+    static var type: String { String(localized: "type", bundle: .module) }
+    static var model: String { String(localized: "model", bundle: .module) }
 }

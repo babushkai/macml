@@ -892,7 +892,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .models: return L.models
         case .runs: return L.training
         case .experiments: return L.experiments
-        case .distillation: return "Distillation"
+        case .distillation: return L.distillation
         case .metrics: return L.metrics
         case .datasets: return L.datasets
         case .inference: return L.inference

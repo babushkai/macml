@@ -2,7 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
-    @StateObject private var languageManager = LanguageManager.shared
+    @ObservedObject private var languageManager = LanguageManager.shared
     @State private var storageStats: StorageStats?
     @State private var isClearing = false
     @State private var showClearCacheConfirmation = false
