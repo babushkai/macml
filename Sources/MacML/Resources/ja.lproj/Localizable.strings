@@ -247,6 +247,8 @@
 "images" = "画像";
 
 /* Settings View */
+"language" = "言語";
+"language_restart_required" = "言語の変更を適用するにはアプリを再起動してください";
 "general" = "一般";
 "training_defaults" = "学習のデフォルト値";
 "ml_training_backend" = "ML学習バックエンド";

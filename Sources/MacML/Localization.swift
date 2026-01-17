@@ -1,9 +1,53 @@
 import Foundation
+import SwiftUI
+
+// MARK: - Language Manager
+
+/// Manages the app's language preference
+class LanguageManager: ObservableObject {
+    static let shared = LanguageManager()
+
+    @Published var currentLanguage: String {
+        didSet {
+            UserDefaults.standard.set(currentLanguage, forKey: "appLanguage")
+            // Update AppleLanguages for next launch
+            if currentLanguage == "system" {
+                UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+            } else {
+                UserDefaults.standard.set([currentLanguage], forKey: "AppleLanguages")
+            }
+        }
+    }
+
+    private init() {
+        // Load saved language preference
+        if let saved = UserDefaults.standard.string(forKey: "appLanguage") {
+            currentLanguage = saved
+        } else {
+            currentLanguage = "system"
+        }
+    }
+
+    /// Available languages
+    static let availableLanguages: [(code: String, name: String, nativeName: String)] = [
+        ("system", "System Default", "システム設定に従う"),
+        ("en", "English", "English"),
+        ("ja", "Japanese", "日本語")
+    ]
+
+    /// Get display name for current language
+    var currentLanguageDisplayName: String {
+        Self.availableLanguages.first { $0.code == currentLanguage }?.nativeName ?? currentLanguage
+    }
+}
 
 // MARK: - Localization Helper
 
 /// Localized string helper using String(localized:) for SwiftUI
 enum L {
+    // Language setting
+    static var language: String { String(localized: "language", bundle: .module) }
+    static var languageRestartRequired: String { String(localized: "language_restart_required", bundle: .module) }
     // MARK: - Navigation & Tabs
     static var dashboard: String { String(localized: "dashboard", bundle: .module) }
     static var models: String { String(localized: "models", bundle: .module) }

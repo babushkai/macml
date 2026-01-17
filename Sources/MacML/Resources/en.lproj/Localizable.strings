@@ -247,6 +247,8 @@
 "images" = "images";
 
 /* Settings View */
+"language" = "Language";
+"language_restart_required" = "Restart app to apply language changes";
 "general" = "General";
 "training_defaults" = "Training Defaults";
 "ml_training_backend" = "ML Training Backend";
