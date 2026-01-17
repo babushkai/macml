@@ -17,6 +17,8 @@ struct ContentView: View {
                     RunsView()
                 case .experiments:
                     ExperimentBrowserView()
+                case .distillation:
+                    DistillationView()
                 case .metrics:
                     MetricsDashboardView()
                 case .datasets:
@@ -57,6 +59,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $appState.showImportDatasetSheet) {
             ImportDatasetSheet()
+        }
+        .sheet(isPresented: $appState.showNewDistillationSheet) {
+            DistillationWizard()
         }
     }
 }
@@ -175,6 +180,12 @@ struct SidebarView: View {
                     .tag(NavigationTab.inference)
             }
 
+            Section("Distillation") {
+                Label(NavigationTab.distillation.localizedName, systemImage: NavigationTab.distillation.icon)
+                    .tag(NavigationTab.distillation)
+                    .badge(appState.activeDistillations.count)
+            }
+
             Section(L.metrics) {
                 Label(NavigationTab.metrics.localizedName, systemImage: NavigationTab.metrics.icon)
                     .tag(NavigationTab.metrics)
@@ -198,6 +209,10 @@ struct SidebarView: View {
                     }
                     Button(action: { appState.showImportDatasetSheet = true }) {
                         Label(L.importDataset, systemImage: "folder.badge.plus")
+                    }
+                    Divider()
+                    Button(action: { appState.showNewDistillationSheet = true }) {
+                        Label("New Distillation", systemImage: "sparkles")
                     }
                 } label: {
                     Image(systemName: "plus")

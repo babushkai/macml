@@ -550,3 +550,229 @@ func formatDuration(_ seconds: TimeInterval) -> String {
     }
     return String(format: "%ds", secs)
 }
+
+// MARK: - Knowledge Distillation
+
+enum TeacherType: String, Codable, CaseIterable, Hashable {
+    case cloudLLM = "Cloud LLM"
+    case localModel = "Local Model"
+    case customAPI = "Custom API"
+
+    var icon: String {
+        switch self {
+        case .cloudLLM: return "cloud"
+        case .localModel: return "laptopcomputer"
+        case .customAPI: return "server.rack"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .cloudLLM: return "Use a cloud-based LLM (Claude, GPT-4, etc.) as teacher"
+        case .localModel: return "Use an existing local model as teacher"
+        case .customAPI: return "Connect to a custom API endpoint"
+        }
+    }
+}
+
+enum CloudProvider: String, Codable, CaseIterable, Hashable {
+    case anthropic = "Anthropic"
+    case openai = "OpenAI"
+    case google = "Google"
+
+    var icon: String {
+        switch self {
+        case .anthropic: return "a.circle"
+        case .openai: return "circle.hexagonpath"
+        case .google: return "g.circle"
+        }
+    }
+
+    var models: [String] {
+        switch self {
+        case .anthropic: return ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"]
+        case .openai: return ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"]
+        case .google: return ["gemini-pro", "gemini-ultra"]
+        }
+    }
+
+    var baseURL: String {
+        switch self {
+        case .anthropic: return "https://api.anthropic.com"
+        case .openai: return "https://api.openai.com"
+        case .google: return "https://generativelanguage.googleapis.com"
+        }
+    }
+}
+
+enum StudentArchitecture: String, Codable, CaseIterable, Hashable {
+    case mlp = "MLP"
+    case cnn = "CNN"
+    case transformer = "Transformer"
+    case lstm = "LSTM"
+
+    var icon: String {
+        switch self {
+        case .mlp: return "brain"
+        case .cnn: return "square.grid.3x3"
+        case .transformer: return "arrow.triangle.branch"
+        case .lstm: return "arrow.uturn.backward"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .mlp: return "Multi-layer Perceptron - simple, fast, good for tabular data"
+        case .cnn: return "Convolutional Neural Network - best for image tasks"
+        case .transformer: return "Transformer - best for sequence/text tasks"
+        case .lstm: return "Long Short-Term Memory - good for time series"
+        }
+    }
+
+    var parameterCount: String {
+        switch self {
+        case .mlp: return "~100K"
+        case .cnn: return "~1M"
+        case .transformer: return "~10M"
+        case .lstm: return "~500K"
+        }
+    }
+}
+
+enum DistillationStatus: String, Codable, CaseIterable {
+    case pending = "Pending"
+    case generatingData = "Generating Data"
+    case training = "Training"
+    case evaluating = "Evaluating"
+    case completed = "Completed"
+    case failed = "Failed"
+    case cancelled = "Cancelled"
+
+    var color: Color {
+        switch self {
+        case .pending: return .gray
+        case .generatingData: return .orange
+        case .training: return .blue
+        case .evaluating: return .purple
+        case .completed: return .green
+        case .failed: return .red
+        case .cancelled: return .secondary
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .pending: return "clock"
+        case .generatingData: return "arrow.down.circle"
+        case .training: return "brain"
+        case .evaluating: return "chart.bar"
+        case .completed: return "checkmark.circle.fill"
+        case .failed: return "xmark.circle.fill"
+        case .cancelled: return "stop.circle.fill"
+        }
+    }
+
+    var isActive: Bool {
+        switch self {
+        case .pending, .generatingData, .training, .evaluating:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+struct DistillationConfig: Codable, Equatable, Hashable {
+    var taskDescription: String
+    var teacherType: TeacherType
+    var cloudProvider: CloudProvider?
+    var teacherModelId: String?
+    var studentArchitecture: StudentArchitecture
+    var temperature: Double
+    var alpha: Double
+    var syntheticSamples: Int
+    var epochs: Int
+    var batchSize: Int
+    var learningRate: Double
+    var datasetId: String?
+
+    static var `default`: DistillationConfig {
+        DistillationConfig(
+            taskDescription: "",
+            teacherType: .cloudLLM,
+            cloudProvider: .anthropic,
+            teacherModelId: "claude-3-sonnet",
+            studentArchitecture: .mlp,
+            temperature: 2.0,
+            alpha: 0.5,
+            syntheticSamples: 1000,
+            epochs: 10,
+            batchSize: 32,
+            learningRate: 0.001
+        )
+    }
+}
+
+struct DistillationRun: Identifiable, Codable, Hashable {
+    let id: String
+    var name: String
+    var config: DistillationConfig
+    var status: DistillationStatus
+    var progress: Double
+    var phase: String
+    var samplesGenerated: Int
+    var apiCallsMade: Int
+    var estimatedCost: Double
+    var currentEpoch: Int
+    var trainLoss: Double?
+    var studentAccuracy: Double?
+    var compressionRatio: Double?
+    var startedAt: Date?
+    var finishedAt: Date?
+    var logs: [LogEntry]
+    var metrics: [MetricPoint]
+
+    init(
+        id: String = UUID().uuidString,
+        name: String,
+        config: DistillationConfig
+    ) {
+        self.id = id
+        self.name = name
+        self.config = config
+        self.status = .pending
+        self.progress = 0
+        self.phase = "Pending"
+        self.samplesGenerated = 0
+        self.apiCallsMade = 0
+        self.estimatedCost = 0
+        self.currentEpoch = 0
+        self.logs = []
+        self.metrics = []
+    }
+
+    var duration: String {
+        guard let start = startedAt else { return "0s" }
+        let end = finishedAt ?? Date()
+        let interval = end.timeIntervalSince(start)
+        return formatDuration(interval)
+    }
+}
+
+struct DistillationSample: Identifiable, Codable, Hashable {
+    let id: String
+    var input: String
+    var teacherOutput: String
+    var teacherLogits: [Double]?
+    var label: Int?
+    var confidence: Double?
+
+    init(input: String, teacherOutput: String, teacherLogits: [Double]? = nil, label: Int? = nil, confidence: Double? = nil) {
+        self.id = UUID().uuidString
+        self.input = input
+        self.teacherOutput = teacherOutput
+        self.teacherLogits = teacherLogits
+        self.label = label
+        self.confidence = confidence
+    }
+}

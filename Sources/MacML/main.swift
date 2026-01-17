@@ -160,6 +160,12 @@ class AppState: ObservableObject {
     @Published var showNewRunSheet = false
     @Published var showImportDatasetSheet = false
     @Published var showInferenceSheet = false
+    @Published var showNewDistillationSheet = false
+
+    // Distillation State
+    @Published var distillationRuns: [DistillationRun] = []
+    @Published var activeDistillations: [String: DistillationRun] = [:]
+    let distillationService = DistillationService.shared
 
     // Loading State
     @Published var isLoading = false
@@ -191,6 +197,7 @@ class AppState: ObservableObject {
             await initializeDatabase()
             await loadData()
             setupTrainingCallbacks()
+            setupDistillationCallbacks()
         }
     }
 
@@ -336,6 +343,44 @@ class AppState: ObservableObject {
         } catch {
             errorMessage = "Failed to save data: \(error.localizedDescription)"
         }
+    }
+
+    // MARK: - Distillation Operations
+
+    private func setupDistillationCallbacks() {
+        distillationService.onDistillationUpdated = { [weak self] run in
+            Task { @MainActor in
+                self?.activeDistillations[run.id] = run
+                if let index = self?.distillationRuns.firstIndex(where: { $0.id == run.id }) {
+                    self?.distillationRuns[index] = run
+                }
+            }
+        }
+
+        distillationService.onDistillationCompleted = { [weak self] run in
+            Task { @MainActor in
+                self?.activeDistillations.removeValue(forKey: run.id)
+                if let index = self?.distillationRuns.firstIndex(where: { $0.id == run.id }) {
+                    self?.distillationRuns[index] = run
+                }
+            }
+        }
+    }
+
+    func startDistillation(run: DistillationRun) {
+        distillationRuns.append(run)
+        Task {
+            _ = await distillationService.startDistillation(run: run)
+        }
+    }
+
+    func cancelDistillation(runId: String) {
+        distillationService.cancelDistillation(runId: runId)
+    }
+
+    func deleteDistillationRun(runId: String) {
+        distillationRuns.removeAll { $0.id == runId }
+        activeDistillations.removeValue(forKey: runId)
     }
 
     // MARK: - Model Operations
@@ -833,6 +878,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
     case models
     case runs
     case experiments
+    case distillation
     case metrics
     case datasets
     case inference
@@ -846,6 +892,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .models: return L.models
         case .runs: return L.training
         case .experiments: return L.experiments
+        case .distillation: return "Distillation"
         case .metrics: return L.metrics
         case .datasets: return L.datasets
         case .inference: return L.inference
@@ -859,6 +906,7 @@ enum NavigationTab: String, CaseIterable, Identifiable {
         case .models: return "cpu"
         case .runs: return "play.circle"
         case .experiments: return "flask"
+        case .distillation: return "sparkles"
         case .metrics: return "chart.xyaxis.line"
         case .datasets: return "folder"
         case .inference: return "wand.and.stars"
