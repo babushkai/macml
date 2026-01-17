@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var languageManager = LanguageManager.shared
     @State private var storageStats: StorageStats?
     @State private var isClearing = false
     @State private var showClearCacheConfirmation = false
@@ -50,10 +51,29 @@ struct SettingsView: View {
 
             Form {
             // General Settings
-            Section(L.general) {
+            Section {
+                // Language Picker
+                Picker(selection: $languageManager.currentLanguage) {
+                    ForEach(LanguageManager.availableLanguages, id: \.code) { lang in
+                        Text(lang.nativeName).tag(lang.code)
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "globe")
+                            .foregroundColor(.blue)
+                        Text(L.language)
+                    }
+                }
+
                 Toggle(L.autoSaveCheckpoints, isOn: $appState.settings.autoSaveCheckpoints)
                 Toggle(L.showNotifications, isOn: $appState.settings.showNotifications)
                 Toggle(L.cacheModels, isOn: $appState.settings.cacheModels)
+            } header: {
+                Text(L.general)
+            } footer: {
+                Text(L.languageRestartRequired)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
             // Training Settings

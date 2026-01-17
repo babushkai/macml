@@ -83,10 +83,10 @@ struct InferenceInputPanel: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Inference")
+                    Text(L.inference)
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(AppTheme.textPrimary)
-                    Text("Run predictions with your trained models")
+                    Text(L.selectModelForInference)
                         .font(.caption)
                         .foregroundColor(AppTheme.textMuted)
                 }
@@ -101,7 +101,7 @@ struct InferenceInputPanel: View {
                 VStack(alignment: .leading, spacing: 24) {
 
                     // STEP 1: Select Model
-                    StepSection(number: 1, title: "Select a Trained Model") {
+                    StepSection(number: 1, title: L.selectTrainedModel) {
                         if trainedModels.isEmpty {
                             // No trained models yet
                             NoTrainedModelsView(completedRuns: completedRuns)
@@ -122,19 +122,19 @@ struct InferenceInputPanel: View {
                     // STEP 2: Select Image(s) (only enabled if model selected)
                     StepSection(
                         number: 2,
-                        title: batchMode ? "Select Input Images" : "Select Input Image",
+                        title: batchMode ? L.selectInputImages : L.selectInputImage,
                         isEnabled: selectedModelId != nil
                     ) {
                         VStack(alignment: .leading, spacing: 12) {
                             // Batch mode toggle
                             HStack {
                                 Toggle(isOn: $batchMode) {
-                                    Label("Batch Mode", systemImage: "square.stack.3d.up")
+                                    Label(L.batchMode, systemImage: "square.stack.3d.up")
                                 }
                                 .toggleStyle(.switch)
 
                                 if batchMode && !batchImageURLs.isEmpty {
-                                    Text("\(batchImageURLs.count) images selected")
+                                    Text("\(batchImageURLs.count) \(L.files)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -143,7 +143,7 @@ struct InferenceInputPanel: View {
 
                                 if batchMode && !batchImageURLs.isEmpty {
                                     Button(action: { batchImageURLs.removeAll() }) {
-                                        Label("Clear", systemImage: "xmark.circle")
+                                        Label(L.clear, systemImage: "xmark.circle")
                                     }
                                     .buttonStyle(.borderless)
                                 }
@@ -171,7 +171,7 @@ struct InferenceInputPanel: View {
                     // STEP 3: Run Inference
                     StepSection(
                         number: 3,
-                        title: batchMode ? "Run Batch Prediction" : "Run Prediction",
+                        title: batchMode ? L.runBatchPrediction : L.runPrediction,
                         isEnabled: canRunInference
                     ) {
                         VStack(spacing: 12) {
@@ -185,10 +185,10 @@ struct InferenceInputPanel: View {
                                             .font(.title2)
                                     }
                                     VStack(alignment: .leading) {
-                                        Text(isRunning ? (batchMode ? "Processing \(Int(batchProgress * 100))%..." : "Running...") : (batchMode ? "Run Batch Inference" : "Run Inference"))
+                                        Text(isRunning ? (batchMode ? L.processingPercent(Int(batchProgress * 100)) : L.runningInferenceDots) : (batchMode ? L.runBatchInference : L.runInference))
                                             .font(.headline)
                                         if let model = selectedModel {
-                                            Text(batchMode ? "\(batchImageURLs.count) images • \(model.name)" : "Using \(model.name)")
+                                            Text(batchMode ? L.nImagesWithModel(batchImageURLs.count, model.name) : L.usingModel(model.name))
                                                 .font(.caption)
                                                 .opacity(0.8)
                                         }
@@ -359,11 +359,11 @@ struct BatchImageSelector: View {
                         .foregroundColor(isDragging ? .accentColor : .secondary)
 
                     if selectedURLs.isEmpty {
-                        Text("Drop images here or click to select")
+                        Text(L.dropImagesHere)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     } else {
-                        Text("Drop more images or click to add")
+                        Text(L.dropMoreImages)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -381,11 +381,11 @@ struct BatchImageSelector: View {
             if !selectedURLs.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("Selected Images")
+                        Text(L.selectedImages)
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Spacer()
-                        Text("\(selectedURLs.count) total")
+                        Text(L.nTotal(selectedURLs.count))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -492,16 +492,16 @@ struct BatchResultsSheet: View {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Batch Inference Results")
+                    Text(L.batchInference)
                         .font(.title2)
                         .fontWeight(.bold)
 
                     HStack(spacing: 16) {
-                        Label("\(results.count) images", systemImage: "photo.stack")
-                        Label("\(successCount) success", systemImage: "checkmark.circle.fill")
+                        Label(L.nImages(results.count), systemImage: "photo.stack")
+                        Label(L.nSuccess(successCount), systemImage: "checkmark.circle.fill")
                             .foregroundColor(.green)
                         if errorCount > 0 {
-                            Label("\(errorCount) failed", systemImage: "exclamationmark.triangle.fill")
+                            Label(L.nFailed(errorCount), systemImage: "exclamationmark.triangle.fill")
                                 .foregroundColor(.red)
                         }
                     }
@@ -535,16 +535,16 @@ struct BatchResultsSheet: View {
             // Footer with export
             HStack {
                 Button(action: exportToCSV) {
-                    Label("Export CSV", systemImage: "square.and.arrow.up")
+                    Label(L.exportCSV, systemImage: "square.and.arrow.up")
                 }
 
                 Button(action: exportToJSON) {
-                    Label("Export JSON", systemImage: "doc.text")
+                    Label(L.exportJSON, systemImage: "doc.text")
                 }
 
                 Spacer()
 
-                Button("Done") { dismiss() }
+                Button(L.done) { dismiss() }
                     .buttonStyle(.borderedProminent)
             }
             .padding()
@@ -706,27 +706,27 @@ struct NoTrainedModelsView: View {
                 .foregroundColor(.secondary)
 
             VStack(spacing: 8) {
-                Text("No Trained Models Yet")
+                Text(L.noTrainedModelsYet)
                     .font(.headline)
 
                 if completedRuns.isEmpty {
-                    Text("Train a model first to use it for inference")
+                    Text(L.trainModelFirst)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
 
                     Button(action: { appState.selectedTab = .runs; appState.showNewRunSheet = true }) {
-                        Label("Start Training", systemImage: "play.fill")
+                        Label(L.startTraining, systemImage: "play.fill")
                     }
                     .buttonStyle(.borderedProminent)
                     .padding(.top, 8)
                 } else {
-                    Text("You have \(completedRuns.count) completed training run(s), but the models haven't been registered yet.")
+                    Text(L.nCompletedRuns(completedRuns.count))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
 
-                    Text("Try running a new training to see it here.")
+                    Text(L.trainModelFirst)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -1028,7 +1028,7 @@ struct ImageDropZone: View {
                     HStack(spacing: 16) {
                         // Original image
                         VStack(spacing: 4) {
-                            Text("Original")
+                            Text(L.original)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                             Image(nsImage: image)
@@ -1043,7 +1043,7 @@ struct ImageDropZone: View {
 
                         // Preprocessed preview (what model sees)
                         VStack(spacing: 4) {
-                            Text("Model Input (28×28)")
+                            Text(L.modelInput)
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                             if let preprocessed = generatePreprocessedImage(from: image) {
@@ -1061,7 +1061,7 @@ struct ImageDropZone: View {
                                 RoundedRectangle(cornerRadius: 4)
                                     .fill(Color.gray.opacity(0.2))
                                     .frame(width: 112, height: 112)
-                                    .overlay(Text("Preview\nUnavailable").font(.caption2).foregroundColor(.secondary).multilineTextAlignment(.center))
+                                    .overlay(Text(L.previewUnavailable).font(.caption2).foregroundColor(.secondary).multilineTextAlignment(.center))
                             }
                         }
                     }
@@ -1075,9 +1075,9 @@ struct ImageDropZone: View {
                                 .foregroundColor(.secondary)
                         }
                         Spacer()
-                        Button("Change") { selectImage() }
+                        Button(L.change) { selectImage() }
                             .buttonStyle(.borderless)
-                        Button("Clear") {
+                        Button(L.clear) {
                             selectedImage = nil
                             selectedImageURL = nil
                         }
@@ -1094,15 +1094,15 @@ struct ImageDropZone: View {
                         .foregroundColor(isDragging ? .accentColor : .secondary)
 
                     VStack(spacing: 4) {
-                        Text(isDragging ? "Drop Image Here" : "Drag & Drop Image")
+                        Text(isDragging ? L.dropImageHere : L.dragDropImage)
                             .font(.headline)
                             .foregroundColor(isDragging ? .accentColor : .primary)
-                        Text("or click to browse")
+                        Text(L.orClickToBrowse)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
 
-                    Button("Browse Files") { selectImage() }
+                    Button(L.browseFiles) { selectImage() }
                         .buttonStyle(.bordered)
                         .disabled(!isEnabled)
                 }
@@ -1259,11 +1259,11 @@ struct InferenceResultsPanel: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Results")
+                Text(L.resultsTitle)
                     .font(.headline)
                 Spacer()
                 if !appState.inferenceHistory.isEmpty {
-                    Text("\(appState.inferenceHistory.count) predictions")
+                    Text(L.nPredictions(appState.inferenceHistory.count))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -1278,10 +1278,10 @@ struct InferenceResultsPanel: View {
                     Image(systemName: "wand.and.stars")
                         .font(.system(size: 48))
                         .foregroundColor(.secondary)
-                    Text("No predictions yet")
+                    Text(L.noPredictionsYet)
                         .font(.headline)
                         .foregroundColor(.secondary)
-                    Text("Run inference to see results here")
+                    Text(L.runInferenceToSeeResults)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -1357,7 +1357,7 @@ struct InferenceResultDetail: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Predictions")
+            Text(L.predictions)
                 .font(.headline)
 
             ForEach(result.predictions) { prediction in

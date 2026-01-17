@@ -73,18 +73,18 @@ struct ModelsView: View {
                             }
 
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Models")
+                                Text(L.models)
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(AppTheme.textPrimary)
 
                                 HStack(spacing: 12) {
-                                    Label("\(appState.models.count) total", systemImage: "square.stack.3d.up")
+                                    Label("\(appState.models.count) \(L.total)", systemImage: "square.stack.3d.up")
                                     if readyModelsCount > 0 {
-                                        Label("\(readyModelsCount) ready", systemImage: "checkmark.circle.fill")
+                                        Label("\(readyModelsCount) \(L.ready)", systemImage: "checkmark.circle.fill")
                                             .foregroundColor(AppTheme.success)
                                     }
                                     if trainingModelsCount > 0 {
-                                        Label("\(trainingModelsCount) training", systemImage: "bolt.fill")
+                                        Label("\(trainingModelsCount) \(L.training)", systemImage: "bolt.fill")
                                             .foregroundColor(AppTheme.warning)
                                     }
                                 }
@@ -104,7 +104,7 @@ struct ModelsView: View {
                                     Button(role: .destructive) {
                                         showingBulkDeleteConfirmation = true
                                     } label: {
-                                        Label("Delete Selected (\(selectedModels.count))", systemImage: "trash")
+                                        Label(L.deleteSelected(selectedModels.count), systemImage: "trash")
                                     }
                                     Divider()
                                 }
@@ -115,13 +115,13 @@ struct ModelsView: View {
                                         selectedModels.removeAll()
                                     }
                                 } label: {
-                                    Label(isSelectionMode ? "Cancel Selection" : "Select Multiple", systemImage: isSelectionMode ? "xmark" : "checkmark.circle")
+                                    Label(isSelectionMode ? L.cancelSelection : L.selectMultiple, systemImage: isSelectionMode ? "xmark" : "checkmark.circle")
                                 }
 
                                 Divider()
 
                                 Toggle(isOn: $showArchiveFilter) {
-                                    Label("Show Archived (\(archivedCount))", systemImage: "archivebox")
+                                    Label("\(L.showArchived) (\(archivedCount))", systemImage: "archivebox")
                                 }
 
                                 Divider()
@@ -133,7 +133,7 @@ struct ModelsView: View {
                                     }
                                     showingBulkDeleteConfirmation = true
                                 } label: {
-                                    Label("Delete All Models", systemImage: "trash.fill")
+                                    Label(L.deleteAllModels, systemImage: "trash.fill")
                                 }
                             } label: {
                                 Image(systemName: "ellipsis.circle")
@@ -145,14 +145,14 @@ struct ModelsView: View {
                         }
 
                         Button(action: { showCreateWizard = true }) {
-                            Label("Create Model", systemImage: "plus")
+                            Label(L.createModel, systemImage: "plus")
                         }
                         .buttonStyle(.bordered)
 
                         Button(action: { appState.showNewModelSheet = true }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "square.and.arrow.down")
-                                Text("Import Model")
+                                Text(L.importModel)
                             }
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.white)
@@ -171,7 +171,7 @@ struct ModelsView: View {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(AppTheme.textMuted)
-                        TextField("Search models...", text: $searchText)
+                        TextField(L.searchModels, text: $searchText)
                             .textFieldStyle(.plain)
                             .foregroundColor(AppTheme.textPrimary)
                         if !searchText.isEmpty {
@@ -190,16 +190,16 @@ struct ModelsView: View {
                             .stroke(Color.white.opacity(0.05), lineWidth: 1)
                     )
 
-                    Picker("Framework", selection: $selectedFramework) {
-                        Text("All Frameworks").tag(nil as MLFramework?)
+                    Picker(L.framework, selection: $selectedFramework) {
+                        Text(L.allFrameworks).tag(nil as MLFramework?)
                         ForEach(MLFramework.allCases, id: \.self) { framework in
                             Label(framework.rawValue, systemImage: framework.icon).tag(framework as MLFramework?)
                         }
                     }
                     .frame(width: 160)
 
-                    Picker("Status", selection: $selectedStatus) {
-                        Text("All Status").tag(nil as ModelStatus?)
+                    Picker(L.allStatus, selection: $selectedStatus) {
+                        Text(L.allStatus).tag(nil as ModelStatus?)
                         ForEach(ModelStatus.allCases, id: \.self) { status in
                             Text(status.rawValue).tag(status as ModelStatus?)
                         }
@@ -276,25 +276,25 @@ struct ModelsView: View {
             }
         }
         .background(Color(NSColor.windowBackgroundColor))
-        .alert("Delete Model", isPresented: $showingDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+        .alert(L.deleteModel, isPresented: $showingDeleteConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.delete, role: .destructive) {
                 if let model = modelToDelete {
                     Task { await appState.deleteModel(model) }
                 }
             }
         } message: {
-            Text("Are you sure you want to delete \"\(modelToDelete?.name ?? "")\"? Associated training runs will also be deleted.")
+            Text(L.confirmDeleteModel(modelToDelete?.name ?? ""))
         }
-        .alert("Delete Models", isPresented: $showingBulkDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {
+        .alert(L.deleteModels, isPresented: $showingBulkDeleteConfirmation) {
+            Button(L.cancel, role: .cancel) {
                 selectedModels.removeAll()
             }
-            Button("Delete \(selectedModels.count) Models", role: .destructive) {
+            Button(L.deleteSelected(selectedModels.count), role: .destructive) {
                 Task { await performBulkDelete() }
             }
         } message: {
-            Text("Are you sure you want to delete \(selectedModels.count) models? Associated training runs will also be deleted. This cannot be undone.")
+            Text(L.confirmDeleteModels(selectedModels.count))
         }
         .sheet(isPresented: $showCreateWizard) {
             ModelCreationWizard()
@@ -314,26 +314,26 @@ struct ModelsView: View {
     @ViewBuilder
     private func modelContextMenu(for model: MLModel) -> some View {
         Button { startTrainingWithModel(model) } label: {
-            Label("Train", systemImage: "play.fill")
+            Label(L.train, systemImage: "play.fill")
         }
 
         if model.status == .ready && model.filePath != nil {
             Button { runInferenceWithModel(model) } label: {
-                Label("Run Inference", systemImage: "wand.and.stars")
+                Label(L.runInference, systemImage: "wand.and.stars")
             }
         }
 
         Divider()
 
         Button { exportModel(model) } label: {
-            Label("Export", systemImage: "square.and.arrow.up")
+            Label(L.export, systemImage: "square.and.arrow.up")
         }
 
         Button {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(model.id, forType: .string)
         } label: {
-            Label("Copy Model ID", systemImage: "doc.on.doc")
+            Label(L.copyModelId, systemImage: "doc.on.doc")
         }
 
         Divider()
@@ -343,13 +343,13 @@ struct ModelsView: View {
             Button {
                 Task { await appState.updateModelStatus(model.id, status: .draft) }
             } label: {
-                Label("Restore", systemImage: "arrow.uturn.backward")
+                Label(L.restore, systemImage: "arrow.uturn.backward")
             }
         } else if model.status != .deprecated {
             Button {
                 Task { await appState.updateModelStatus(model.id, status: .archived) }
             } label: {
-                Label("Archive", systemImage: "archivebox")
+                Label(L.archive, systemImage: "archivebox")
             }
         }
 
@@ -358,13 +358,13 @@ struct ModelsView: View {
             Button {
                 Task { await appState.updateModelStatus(model.id, status: .draft) }
             } label: {
-                Label("Undeprecate", systemImage: "arrow.uturn.backward")
+                Label(L.undeprecate, systemImage: "arrow.uturn.backward")
             }
         } else if model.status != .archived {
             Button {
                 Task { await appState.updateModelStatus(model.id, status: .deprecated) }
             } label: {
-                Label("Mark Deprecated", systemImage: "exclamationmark.triangle")
+                Label(L.markDeprecated, systemImage: "exclamationmark.triangle")
             }
         }
 
@@ -374,7 +374,7 @@ struct ModelsView: View {
             modelToDelete = model
             showingDeleteConfirmation = true
         } label: {
-            Label("Delete", systemImage: "trash")
+            Label(L.delete, systemImage: "trash")
         }
     }
 
@@ -437,10 +437,10 @@ struct EmptyModelsView: View {
             }
 
             VStack(spacing: 8) {
-                Text(hasModels ? "No Matching Models" : "No Models")
+                Text(hasModels ? L.noMatchingModels : L.noModels)
                     .font(.title2)
                     .fontWeight(.semibold)
-                Text(hasModels ? "Try adjusting your search or filters" : "Import a model or create one to start training")
+                Text(hasModels ? L.adjustFilters : L.importModelToStart)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -449,12 +449,12 @@ struct EmptyModelsView: View {
 
             if hasModels {
                 Button(action: onClearSearch) {
-                    Label("Clear Filters", systemImage: "xmark.circle")
+                    Label(L.clearFilters, systemImage: "xmark.circle")
                 }
                 .buttonStyle(.bordered)
             } else {
                 Button(action: onImport) {
-                    Label("Import Model", systemImage: "square.and.arrow.down")
+                    Label(L.importModel, systemImage: "square.and.arrow.down")
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
@@ -563,20 +563,20 @@ struct ModelCard: View {
 
                     Menu {
                         Button(action: { startTrainingWithModel() }) {
-                            Label("Train", systemImage: "play.fill")
+                            Label(L.train, systemImage: "play.fill")
                         }
                         if model.filePath != nil {
                             Button(action: { runInferenceWithModel() }) {
-                                Label("Run Inference", systemImage: "wand.and.stars")
+                                Label(L.runInference, systemImage: "wand.and.stars")
                             }
                         }
                         Divider()
                         Button(action: onExport) {
-                            Label("Export", systemImage: "square.and.arrow.up")
+                            Label(L.export, systemImage: "square.and.arrow.up")
                         }
                         Divider()
                         Button(role: .destructive, action: onDelete) {
-                            Label("Delete", systemImage: "trash")
+                            Label(L.delete, systemImage: "trash")
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle")
@@ -597,7 +597,7 @@ struct ModelCard: View {
                         HStack {
                             ProgressView()
                                 .scaleEffect(0.7)
-                            Text("Loading model info...")
+                            Text(L.loadingModelInfo)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -606,15 +606,15 @@ struct ModelCard: View {
                             GridItem(.flexible()),
                             GridItem(.flexible())
                         ], spacing: 8) {
-                            DetailItem(label: "Author", value: info.author)
-                            DetailItem(label: "Version", value: info.version)
-                            DetailItem(label: "Inputs", value: info.inputs.joined(separator: ", "))
-                            DetailItem(label: "Outputs", value: info.outputs.joined(separator: ", "))
+                            DetailItem(label: L.author, value: info.author)
+                            DetailItem(label: L.version, value: info.version)
+                            DetailItem(label: L.inputs, value: info.inputs.joined(separator: ", "))
+                            DetailItem(label: L.outputs, value: info.outputs.joined(separator: ", "))
                         }
 
                         if !info.description.isEmpty {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Description")
+                                Text(L.description)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Text(info.description)
@@ -626,7 +626,7 @@ struct ModelCard: View {
                     // Metadata
                     if !model.metadata.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Metadata")
+                            Text(L.metadata)
                                 .font(.caption)
                                 .fontWeight(.medium)
                                 .foregroundColor(.secondary)
@@ -647,9 +647,9 @@ struct ModelCard: View {
                     Divider()
 
                     HStack {
-                        Label("Created \(model.createdAt.formatted(date: .abbreviated, time: .shortened))", systemImage: "calendar")
+                        Label("\(L.created) \(model.createdAt.formatted(date: .abbreviated, time: .shortened))", systemImage: "calendar")
                         Spacer()
-                        Label("Updated \(model.updatedAt.formatted(date: .abbreviated, time: .shortened))", systemImage: "clock")
+                        Label("\(L.updated) \(model.updatedAt.formatted(date: .abbreviated, time: .shortened))", systemImage: "clock")
                     }
                     .font(.caption2)
                     .foregroundColor(.secondary)
@@ -758,11 +758,11 @@ struct ModelDropZone: View {
             .animation(.easeInOut(duration: 0.2), value: isDragging)
 
             VStack(spacing: 4) {
-                Text(isDragging ? "Drop to Import" : "Drag & Drop Model Here")
+                Text(isDragging ? L.dropToImport : L.dragDropModel)
                     .font(.headline)
                     .foregroundColor(isDragging ? .accentColor : .primary)
 
-                Text("Supports .mlmodel, .mlmodelc, .mlpackage, .safetensors files")
+                Text(L.supportedFormats)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

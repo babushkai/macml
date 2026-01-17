@@ -93,14 +93,14 @@ struct DatasetsView: View {
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Datasets")
+                            Text(L.datasets)
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(AppTheme.textPrimary)
 
                             HStack(spacing: 12) {
-                                Label("\(activeCount) active", systemImage: "folder")
+                                Label(L.nActive(activeCount), systemImage: "folder")
                                 if archivedCount > 0 {
-                                    Label("\(archivedCount) archived", systemImage: "archivebox")
+                                    Label("\(archivedCount) \(L.archived)", systemImage: "archivebox")
                                         .foregroundColor(AppTheme.textMuted)
                                 }
                             }
@@ -114,7 +114,7 @@ struct DatasetsView: View {
                     HStack(spacing: 8) {
                         Menu {
                             Toggle(isOn: $showArchiveFilter) {
-                                Label("Show Archived (\(archivedCount))", systemImage: "archivebox")
+                                Label("\(L.showArchived) (\(archivedCount))", systemImage: "archivebox")
                             }
                         } label: {
                             Image(systemName: "ellipsis.circle")
@@ -125,14 +125,14 @@ struct DatasetsView: View {
                         .frame(width: 30)
 
                         Button(action: { showCreateWizard = true }) {
-                            Label("Create Dataset", systemImage: "plus")
+                            Label(L.createDataset, systemImage: "plus")
                         }
                         .buttonStyle(.bordered)
 
                         Button(action: { appState.showImportDatasetSheet = true }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "folder.badge.plus")
-                                Text("Import Dataset")
+                                Text(L.importDataset)
                             }
                             .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.white)
@@ -150,7 +150,7 @@ struct DatasetsView: View {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(AppTheme.textMuted)
-                    TextField("Search datasets...", text: $searchText)
+                    TextField(L.searchDatasets, text: $searchText)
                         .textFieldStyle(.plain)
                         .foregroundColor(AppTheme.textPrimary)
                     if !searchText.isEmpty {
@@ -169,16 +169,16 @@ struct DatasetsView: View {
                         .stroke(Color.white.opacity(0.05), lineWidth: 1)
                 )
 
-                Picker("Type", selection: $selectedType) {
-                    Text("All Types").tag(nil as DatasetType?)
+                Picker(L.dataType, selection: $selectedType) {
+                    Text(L.allTypes).tag(nil as DatasetType?)
                     ForEach(DatasetType.allCases, id: \.self) { type in
                         Label(type.rawValue, systemImage: type.icon).tag(type as DatasetType?)
                     }
                 }
                 .frame(width: 140)
 
-                Picker("Status", selection: $selectedStatus) {
-                    Text("All Status").tag(nil as DatasetStatus?)
+                Picker(L.allStatus, selection: $selectedStatus) {
+                    Text(L.allStatus).tag(nil as DatasetStatus?)
                     ForEach(DatasetStatus.allCases, id: \.self) { status in
                         Text(status.rawValue).tag(status as DatasetStatus?)
                     }
@@ -195,9 +195,9 @@ struct DatasetsView: View {
             if filteredDatasets.isEmpty {
                 EmptyStateView(
                     icon: "folder",
-                    title: "No Datasets",
-                    message: searchText.isEmpty ? "Import a dataset to get started" : "No datasets match your search",
-                    actionTitle: searchText.isEmpty ? "Import Dataset" : nil,
+                    title: L.noDatasetsYet,
+                    message: searchText.isEmpty ? L.noDatasetsYet : L.adjustFilters,
+                    actionTitle: searchText.isEmpty ? L.importDataset : nil,
                     action: searchText.isEmpty ? { appState.showImportDatasetSheet = true } : nil
                 )
             } else {
@@ -229,15 +229,15 @@ struct DatasetsView: View {
             handleDrop(providers: providers)
             return true
         }
-        .alert("Delete Dataset", isPresented: $showingDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
+        .alert(L.deleteDataset, isPresented: $showingDeleteConfirmation) {
+            Button(L.cancel, role: .cancel) {}
+            Button(L.delete, role: .destructive) {
                 if let dataset = datasetToDelete {
                     Task { await appState.deleteDataset(dataset) }
                 }
             }
         } message: {
-            Text("Are you sure you want to delete '\(datasetToDelete?.name ?? "")'? This will remove the dataset files.")
+            Text(L.confirmDeleteModel(datasetToDelete?.name ?? ""))
         }
         .sheet(isPresented: $showCreateWizard) {
             DatasetCreationWizard()
@@ -282,14 +282,14 @@ struct DatasetCard: View {
 
                 Menu {
                     Button(action: { openInFinder() }) {
-                        Label("Show in Finder", systemImage: "folder")
+                        Label(L.showInFinder, systemImage: "folder")
                     }
 
                     Button {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(dataset.id, forType: .string)
                     } label: {
-                        Label("Copy Dataset ID", systemImage: "doc.on.doc")
+                        Label(L.copyDatasetId, systemImage: "doc.on.doc")
                     }
 
                     Divider()
@@ -299,13 +299,13 @@ struct DatasetCard: View {
                         Button {
                             Task { await appState.updateDatasetStatus(dataset.id, status: .active) }
                         } label: {
-                            Label("Restore", systemImage: "arrow.uturn.backward")
+                            Label(L.restore, systemImage: "arrow.uturn.backward")
                         }
                     } else if dataset.status != .deprecated {
                         Button {
                             Task { await appState.updateDatasetStatus(dataset.id, status: .archived) }
                         } label: {
-                            Label("Archive", systemImage: "archivebox")
+                            Label(L.archive, systemImage: "archivebox")
                         }
                     }
 
@@ -314,20 +314,20 @@ struct DatasetCard: View {
                         Button {
                             Task { await appState.updateDatasetStatus(dataset.id, status: .active) }
                         } label: {
-                            Label("Undeprecate", systemImage: "arrow.uturn.backward")
+                            Label(L.undeprecate, systemImage: "arrow.uturn.backward")
                         }
                     } else if dataset.status != .archived {
                         Button {
                             Task { await appState.updateDatasetStatus(dataset.id, status: .deprecated) }
                         } label: {
-                            Label("Mark Deprecated", systemImage: "exclamationmark.triangle")
+                            Label(L.markDeprecated, systemImage: "exclamationmark.triangle")
                         }
                     }
 
                     Divider()
 
                     Button(role: .destructive, action: onDelete) {
-                        Label("Delete", systemImage: "trash")
+                        Label(L.delete, systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -347,17 +347,17 @@ struct DatasetCard: View {
 
             // Stats
             HStack(spacing: 16) {
-                DatasetStat(icon: "doc.on.doc", value: "\(dataset.sampleCount)", label: "Samples")
-                DatasetStat(icon: "internaldrive", value: formatBytes(dataset.size), label: "Size")
+                DatasetStat(icon: "doc.on.doc", value: "\(dataset.sampleCount)", label: L.samples)
+                DatasetStat(icon: "internaldrive", value: formatBytes(dataset.size), label: L.size)
                 if !dataset.classes.isEmpty {
-                    DatasetStat(icon: "tag", value: "\(dataset.classes.count)", label: "Classes")
+                    DatasetStat(icon: "tag", value: "\(dataset.classes.count)", label: L.classes)
                 }
             }
 
             // Classes (if available)
             if !dataset.classes.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Classes")
+                    Text(L.classes)
                         .font(.caption)
                         .foregroundColor(.secondary)
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -371,7 +371,7 @@ struct DatasetCard: View {
                                     .cornerRadius(4)
                             }
                             if dataset.classes.count > 10 {
-                                Text("+\(dataset.classes.count - 10) more")
+                                Text(L.nMore(dataset.classes.count - 10))
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
                             }
@@ -382,12 +382,12 @@ struct DatasetCard: View {
 
             // Footer
             HStack {
-                Text("Created \(dataset.createdAt.formatted(date: .abbreviated, time: .omitted))")
+                Text(L.createdDate(dataset.createdAt.formatted(date: .abbreviated, time: .omitted)))
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 Spacer()
                 if dataset.updatedAt != dataset.createdAt {
-                    Text("Updated \(dataset.updatedAt.formatted(date: .abbreviated, time: .omitted))")
+                    Text(L.updatedDate(dataset.updatedAt.formatted(date: .abbreviated, time: .omitted)))
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -452,12 +452,12 @@ struct DatasetDropZone: View {
                     .font(.system(size: 64))
                     .foregroundColor(.white)
 
-                Text("Drop Folder to Import Dataset")
+                Text(L.dropFolder)
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
 
-                Text("Drop a folder containing images organized by class")
+                Text(L.dropFolderContainingImages)
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.8))
             }

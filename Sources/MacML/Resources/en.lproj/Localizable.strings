@@ -134,6 +134,63 @@
 "loss" = "Loss";
 "accuracy" = "Accuracy";
 "learning_rate" = "Learning Rate";
+"time" = "Time";
+"entries" = "entries";
+
+/* Filter labels */
+"filter_all" = "All";
+"filter_active" = "Active";
+"filter_completed" = "Completed";
+"filter_failed" = "Failed";
+
+/* Tab labels */
+"tab_training" = "Training";
+"tab_console" = "Console";
+"tab_config" = "Config";
+
+/* Placeholder */
+"select_training_run" = "Select a Training Run";
+"select_run_subtitle" = "Choose a run from the list to view details, metrics, and logs";
+
+/* Bulk delete */
+"delete_failed_runs" = "Delete Failed Runs";
+"delete_selected_runs" = "Delete Selected Runs";
+"delete_all_runs" = "Delete All Runs";
+
+/* Empty states */
+"no_active_training" = "No training is currently running";
+"completed_runs_appear_here" = "Completed runs will appear here";
+"no_failures_message" = "Great! No failures to report";
+"start_training_description" = "Start a training run to train your models on your datasets";
+
+/* Config sections */
+"training_history" = "Training History";
+"console_output" = "Console Output";
+"model_architecture" = "Model Architecture";
+"training_configuration" = "Training Configuration";
+"run_information" = "Run Information";
+"results" = "Results";
+"extended_metrics" = "Extended Metrics";
+"extended_metrics_not_available" = "Extended metrics not available for this run";
+
+/* Config rows */
+"run_id" = "Run ID";
+"started" = "Started";
+"finished" = "Finished";
+"status" = "Status";
+"final_loss" = "Final Loss";
+"final_accuracy" = "Final Accuracy";
+"total_duration" = "Total Duration";
+"precision" = "Precision";
+"recall" = "Recall";
+"f1_score" = "F1 Score";
+
+/* Console */
+"waiting_for_output" = "Waiting for output...";
+"copy_all_logs" = "Copy all logs";
+
+/* Progress */
+"complete" = "complete";
 
 /* Datasets View */
 "no_datasets_yet" = "No datasets yet";
@@ -158,8 +215,40 @@
 "no_models_available" = "No models available";
 "export_csv" = "Export CSV";
 "export_json" = "Export JSON";
+"select_trained_model" = "Select a Trained Model";
+"select_input_image" = "Select Input Image";
+"select_input_images" = "Select Input Images";
+"run_prediction" = "Run Prediction";
+"run_batch_prediction" = "Run Batch Prediction";
+"running_inference_dots" = "Running...";
+"run_batch_inference" = "Run Batch Inference";
+"drop_images_here" = "Drop images here or click to select";
+"drop_more_images" = "Drop more images or click to add";
+"selected_images" = "Selected Images";
+"no_trained_models_yet" = "No Trained Models Yet";
+"train_model_first" = "Train a model first to use it for inference";
+"output_classes" = "Output Classes";
+"edit_output_classes" = "Edit Output Classes";
+"edit" = "Edit";
+"original" = "Original";
+"model_input" = "Model Input (28×28)";
+"preview_unavailable" = "Preview Unavailable";
+"change" = "Change";
+"drag_drop_image" = "Drag & Drop Image";
+"drop_image_here" = "Drop Image Here";
+"or_click_to_browse" = "or click to browse";
+"browse_files" = "Browse Files";
+"results_title" = "Results";
+"no_predictions_yet" = "No predictions yet";
+"run_inference_to_see_results" = "Run inference to see results here";
+"predictions" = "Predictions";
+"done" = "Done";
+"success" = "success";
+"images" = "images";
 
 /* Settings View */
+"language" = "Language";
+"language_restart_required" = "Restart app to apply language changes";
 "general" = "General";
 "training_defaults" = "Training Defaults";
 "ml_training_backend" = "ML Training Backend";
@@ -262,3 +351,24 @@
 "runs_deleted %lld" = "%lld runs deleted";
 "delete_selected %lld" = "Delete Selected (%lld)";
 "view_all_active_runs %lld" = "View all %lld active runs";
+"epoch_of %lld %lld" = "Epoch %lld of %lld";
+"percent_complete %lld" = "%lld%% complete";
+"delete_failed_runs_count %lld" = "Delete all %lld failed runs? This cannot be undone.";
+"delete_selected_runs_count %lld" = "Delete %lld selected runs? This cannot be undone.";
+"delete_all_runs_count %lld" = "Delete all %lld runs? This cannot be undone.";
+"n_entries %lld" = "%lld entries";
+"n_more %lld" = "+%lld more";
+"created_date %@" = "Created %@";
+"updated_date %@" = "Updated %@";
+"drop_folder_containing_images" = "Drop a folder containing images organized by class";
+"processing_percent %lld" = "Processing %lld%%...";
+"n_images %lld" = "%lld images";
+"n_predictions %lld" = "%lld predictions";
+"n_success %lld" = "%lld success";
+"n_failed %lld" = "%lld failed";
+"n_total %lld" = "%lld total";
+"using_model %@" = "Using %@";
+"n_images_with_model %lld %@" = "%lld images • %@";
+"n_output_classes %lld" = "Output Classes (%lld)";
+"class_index %lld" = "Class %lld:";
+"n_completed_runs %lld" = "You have %lld completed training run(s), but the models haven't been registered yet.";

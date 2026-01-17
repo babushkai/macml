@@ -512,6 +512,7 @@ struct AppSettings: Codable, Equatable {
     var theme: String
     var modelsDirectory: String
     var datasetsDirectory: String
+    var language: String  // "system", "en", or "ja"
 
     static var `default`: AppSettings {
         AppSettings(
@@ -526,7 +527,8 @@ struct AppSettings: Codable, Equatable {
             defaultLearningRate: 0.001,
             theme: "system",
             modelsDirectory: "Models",
-            datasetsDirectory: "Datasets"
+            datasetsDirectory: "Datasets",
+            language: "system"
         )
     }
 }
