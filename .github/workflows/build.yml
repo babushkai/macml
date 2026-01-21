@@ -41,7 +41,7 @@ jobs:
           codesign --force --deep --sign - MacML.app
           ditto -c -k --keepParent MacML.app MacML-pr${{ github.event.pull_request.number }}.zip
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: github.event_name == 'pull_request'
         with:
           name: MacML-pr${{ github.event.pull_request.number }}
