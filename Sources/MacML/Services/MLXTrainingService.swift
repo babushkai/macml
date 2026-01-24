@@ -29,11 +29,15 @@ actor MLXTrainingService: TrainingBackend {
         modelConfig: ModelArchitecture,
         datasetPath: String?,
         runId: String,
+        startEpoch: Int = 1,
         progressHandler: @escaping (TrainingProgress) -> Void
     ) async throws -> TrainingResult {
         guard !_isTraining else {
             throw TrainingError.invalidConfiguration("Training already in progress")
         }
+
+        // Validate startEpoch
+        let effectiveStartEpoch = max(1, min(startEpoch, config.epochs))
 
         _isTraining = true
         defer { _isTraining = false }
@@ -145,8 +149,22 @@ actor MLXTrainingService: TrainingBackend {
             runId: runId
         )
 
-        // Training loop
-        for epoch in 1...config.epochs {
+        // Log if resuming from a later epoch
+        if effectiveStartEpoch > 1 {
+            progressHandler(TrainingProgress(
+                epoch: effectiveStartEpoch - 1,
+                totalEpochs: config.epochs,
+                step: nil,
+                totalSteps: nil,
+                loss: 0,
+                accuracy: nil,
+                learningRate: config.learningRate,
+                message: "Resuming training from epoch \(effectiveStartEpoch)"
+            ))
+        }
+
+        // Training loop - start from effectiveStartEpoch for resume support
+        for epoch in effectiveStartEpoch...config.epochs {
             try Task.checkCancellation()
 
             let epochResult = try await trainEpoch(

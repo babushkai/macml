@@ -242,14 +242,17 @@ class TrainingService: ObservableObject {
 
     // MARK: - Real MLX Training
 
-    private func runMLXTraining(runId: String, datasetPath: String?) async {
+    private func runMLXTraining(runId: String, datasetPath: String?, startEpoch: Int = 1) async {
         guard var run = activeRuns[runId] else { return }
         guard let config = runConfigs[runId] else { return }
 
         // Get model architecture from config
         let modelConfig = config.architecture.toModelArchitecture()
 
-        run.logs.append(LogEntry(level: .info, message: "Initializing MLX training on Apple Silicon..."))
+        let resumeMessage = startEpoch > 1
+            ? "Resuming MLX training from epoch \(startEpoch)..."
+            : "Initializing MLX training on Apple Silicon..."
+        run.logs.append(LogEntry(level: .info, message: resumeMessage))
         activeRuns[runId] = run
         onRunUpdated?(run)
 
@@ -258,7 +261,8 @@ class TrainingService: ObservableObject {
                 config: config,
                 modelConfig: modelConfig,
                 datasetPath: datasetPath,
-                runId: runId
+                runId: runId,
+                startEpoch: startEpoch
             ) { [weak self] progress in
                 Task { @MainActor in
                     guard var currentRun = self?.activeRuns[runId] else { return }
@@ -337,14 +341,16 @@ class TrainingService: ObservableObject {
         onRunUpdated?(run)
 
         // Resume training task based on architecture
+        // IMPORTANT: Use currentEpoch + 1 as the starting point since currentEpoch was completed before pause
         let capturedRunId = runId
+        let startEpoch = run.currentEpoch + 1  // Resume from next epoch after the completed one
         let datasetPath = runDatasetPaths[runId] ?? nil
         let config = runConfigs[runId]
         let task = Task {
             if let config = config, config.architecture.requiresPython {
                 await self.runPythonTraining(runId: capturedRunId, datasetPath: datasetPath, architecture: config.architecture)
             } else if self.useRealMLX {
-                await self.runMLXTraining(runId: capturedRunId, datasetPath: datasetPath)
+                await self.runMLXTraining(runId: capturedRunId, datasetPath: datasetPath, startEpoch: startEpoch)
             } else {
                 await self.runTrainingLoop(runId: capturedRunId)
             }

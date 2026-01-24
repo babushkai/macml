@@ -5,11 +5,19 @@ import Foundation
 /// Protocol for training backend implementations (MLX, simulated, etc.)
 protocol TrainingBackend: Actor {
     /// Start training with the given configuration
+    /// - Parameters:
+    ///   - config: Training configuration (epochs, batch size, etc.)
+    ///   - modelConfig: Neural network architecture configuration
+    ///   - datasetPath: Path to the dataset (optional)
+    ///   - runId: Unique identifier for this training run
+    ///   - startEpoch: Epoch to start from (1-based, default 1). Use > 1 when resuming training.
+    ///   - progressHandler: Callback for progress updates
     func train(
         config: TrainingConfig,
         modelConfig: ModelArchitecture,
         datasetPath: String?,
         runId: String,
+        startEpoch: Int,
         progressHandler: @escaping (TrainingProgress) -> Void
     ) async throws -> TrainingResult
 
