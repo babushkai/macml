@@ -444,6 +444,11 @@ class AppState: ObservableObject {
     func deleteModel(_ model: MLModel) async {
         do {
             try await storage.deleteModelFile(model)
+            // Clean up resources for associated runs before removing them
+            let associatedRuns = runs.filter { $0.modelId == model.id }
+            for run in associatedRuns {
+                await cleanupRunResources(runId: run.id)
+            }
             models.removeAll { $0.id == model.id }
             // Also delete associated runs
             runs.removeAll { $0.modelId == model.id }
@@ -455,6 +460,12 @@ class AppState: ObservableObject {
     }
 
     func deleteModels(_ modelsToDelete: [MLModel]) async {
+        let idsToDelete = Set(modelsToDelete.map { $0.id })
+        // Clean up resources for associated runs before removing them
+        let associatedRuns = runs.filter { idsToDelete.contains($0.modelId) }
+        for run in associatedRuns {
+            await cleanupRunResources(runId: run.id)
+        }
         for model in modelsToDelete {
             do {
                 try await storage.deleteModelFile(model)
@@ -462,7 +473,6 @@ class AppState: ObservableObject {
                 Log.warning("Failed to delete model file: \(error.localizedDescription)", category: .app)
             }
         }
-        let idsToDelete = Set(modelsToDelete.map { $0.id })
         models.removeAll { idsToDelete.contains($0.id) }
         runs.removeAll { idsToDelete.contains($0.modelId) }
         await saveData()
@@ -629,6 +639,8 @@ class AppState: ObservableObject {
         if trainingService.isRunning(run.id) {
             trainingService.cancelTraining(runId: run.id)
         }
+        // Clean up checkpoints and artifacts for this run
+        await cleanupRunResources(runId: run.id)
         runs.removeAll { $0.id == run.id }
         await saveData()
         showSuccess("Run deleted")
@@ -639,6 +651,8 @@ class AppState: ObservableObject {
             if trainingService.isRunning(run.id) {
                 trainingService.cancelTraining(runId: run.id)
             }
+            // Clean up checkpoints and artifacts for each run
+            await cleanupRunResources(runId: run.id)
         }
         let idsToDelete = Set(runsToDelete.map { $0.id })
         runs.removeAll { idsToDelete.contains($0.id) }
@@ -656,10 +670,30 @@ class AppState: ObservableObject {
             if trainingService.isRunning(run.id) {
                 trainingService.cancelTraining(runId: run.id)
             }
+            // Clean up checkpoints and artifacts for each run
+            await cleanupRunResources(runId: run.id)
         }
         runs.removeAll()
         await saveData()
         showSuccess("All runs deleted")
+    }
+
+    /// Clean up checkpoints and artifacts associated with a training run
+    private func cleanupRunResources(runId: String) async {
+        // Delete checkpoints
+        do {
+            try await CheckpointManager.shared.deleteCheckpoints(runId: runId)
+        } catch {
+            Log.warning("Failed to delete checkpoints for run \(runId): \(error.localizedDescription)", category: .training)
+        }
+
+        // Delete artifacts
+        do {
+            let artifactRepo = ArtifactRepository()
+            try await artifactRepo.deleteByRun(runId)
+        } catch {
+            Log.warning("Failed to delete artifacts for run \(runId): \(error.localizedDescription)", category: .training)
+        }
     }
 
     private func updateModelAccuracy(_ modelId: String, accuracy: Double) async {

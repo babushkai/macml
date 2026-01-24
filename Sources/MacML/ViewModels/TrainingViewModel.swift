@@ -172,6 +172,8 @@ class TrainingViewModel: ObservableObject {
         if trainingService.isRunning(run.id) {
             trainingService.cancelTraining(runId: run.id)
         }
+        // Clean up checkpoints and artifacts for this run
+        await cleanupRunResources(runId: run.id)
         runs.removeAll { $0.id == run.id }
         await saveRuns()
         Log.info("Run deleted", category: .training)
@@ -182,6 +184,8 @@ class TrainingViewModel: ObservableObject {
             if trainingService.isRunning(run.id) {
                 trainingService.cancelTraining(runId: run.id)
             }
+            // Clean up checkpoints and artifacts for each run
+            await cleanupRunResources(runId: run.id)
         }
 
         let idsToDelete = Set(runsToDelete.map { $0.id })
@@ -199,10 +203,30 @@ class TrainingViewModel: ObservableObject {
             if trainingService.isRunning(run.id) {
                 trainingService.cancelTraining(runId: run.id)
             }
+            // Clean up checkpoints and artifacts for each run
+            await cleanupRunResources(runId: run.id)
         }
         runs.removeAll()
         await saveRuns()
         Log.info("All runs deleted", category: .training)
+    }
+
+    /// Clean up checkpoints and artifacts associated with a training run
+    private func cleanupRunResources(runId: String) async {
+        // Delete checkpoints
+        do {
+            try await CheckpointManager.shared.deleteCheckpoints(runId: runId)
+        } catch {
+            Log.warning("Failed to delete checkpoints for run \(runId): \(error.localizedDescription)", category: .training)
+        }
+
+        // Delete artifacts
+        do {
+            let artifactRepo = ArtifactRepository()
+            try await artifactRepo.deleteByRun(runId)
+        } catch {
+            Log.warning("Failed to delete artifacts for run \(runId): \(error.localizedDescription)", category: .training)
+        }
     }
 
     // MARK: - Queries
