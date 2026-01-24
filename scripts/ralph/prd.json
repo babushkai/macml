@@ -1,0 +1,77 @@
+{
+  "project": "MacML",
+  "branchName": "ralph/bug-hunting",
+  "description": "Bug Hunting - Proactively discover and fix hidden bugs in MacML",
+  "userStories": [
+    {
+      "id": "HUNT-001",
+      "title": "Investigate race conditions and concurrency bugs",
+      "description": "As a developer, I need to find and fix any race conditions or concurrency issues.",
+      "acceptanceCriteria": [
+        "Analyze async/await usage, actor isolation, and shared state",
+        "Identify any potential data races or deadlocks",
+        "Fix at least one concurrency issue if found, or document why code is safe",
+        "Build passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "HUNT-002",
+      "title": "Find and fix edge case bugs in training flow",
+      "description": "As a user, I want training to handle edge cases gracefully.",
+      "acceptanceCriteria": [
+        "Review training service code for edge cases: empty datasets, zero epochs, cancelled mid-training, memory pressure",
+        "Identify at least one bug or edge case not handled properly",
+        "Implement the fix",
+        "Build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "HUNT-003",
+      "title": "Audit database operations for data corruption risks",
+      "description": "As a user, I want my data to be safe from corruption.",
+      "acceptanceCriteria": [
+        "Review GRDB database operations and migrations",
+        "Check for missing transactions, orphaned records, or unsafe deletions",
+        "Fix any data integrity issues found",
+        "Build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "HUNT-004",
+      "title": "Find UI state bugs",
+      "description": "As a user, I want the UI to always reflect the correct state.",
+      "acceptanceCriteria": [
+        "Review SwiftUI views for stale state, missing updates, or binding issues",
+        "Check for proper @MainActor usage and state synchronization",
+        "Fix any UI state bugs discovered",
+        "Build passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "HUNT-005",
+      "title": "Investigate file/resource management bugs",
+      "description": "As a user, I want resources properly managed without leaks.",
+      "acceptanceCriteria": [
+        "Review file handles, checkpoint loading, and resource cleanup",
+        "Check for memory leaks, unclosed resources, or orphaned files",
+        "Fix any resource management issues found",
+        "Build passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

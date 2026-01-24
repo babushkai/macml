@@ -12,8 +12,13 @@ class MemoryPressureManager: ObservableObject {
     @Published var memoryUsage: MemoryUsage = MemoryUsage()
     @Published var recommendations: [MemoryRecommendation] = []
 
-    private var monitoringTask: Task<Void, Never>?
-    private var dispatchSource: DispatchSourceMemoryPressure?
+    // Using nonisolated(unsafe) for these properties allows safe access from deinit.
+    // This is safe because:
+    // 1. Task.cancel() and DispatchSource.cancel() are thread-safe operations
+    // 2. deinit is called only when no other references exist (single writer)
+    // 3. These properties are only modified during init (on MainActor) and read in deinit
+    private nonisolated(unsafe) var monitoringTask: Task<Void, Never>?
+    private nonisolated(unsafe) var dispatchSource: DispatchSourceMemoryPressure?
     private var cancellables = Set<AnyCancellable>()
 
     // Thresholds
@@ -26,6 +31,8 @@ class MemoryPressureManager: ObservableObject {
     }
 
     deinit {
+        // Safe to call from deinit because cancel() is thread-safe and
+        // the properties are marked nonisolated(unsafe)
         monitoringTask?.cancel()
         dispatchSource?.cancel()
     }

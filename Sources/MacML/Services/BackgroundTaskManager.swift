@@ -110,12 +110,14 @@ class BackgroundTaskManager: ObservableObject {
         taskCancellationTokens[taskId] = false
         isProcessingInBackground = true
 
+        // Capture the cancellation check in an @MainActor closure to avoid data race
+        // when isCancelled is called from non-main-actor contexts
         let handle = BackgroundTaskHandle(
             taskId: taskId,
             updateProgress: { [weak self] progress, message in
                 await self?.updateTask(taskId, progress: progress, message: message)
             },
-            isCancelled: { [weak self] in
+            isCancelled: { @MainActor [weak self] in
                 self?.taskCancellationTokens[taskId] ?? true
             }
         )
@@ -263,15 +265,16 @@ class BackgroundTaskManager: ObservableObject {
 // MARK: - Background Task Handle
 
 /// Handle for updating task progress from within the task
-struct BackgroundTaskHandle {
+struct BackgroundTaskHandle: Sendable {
     let taskId: String
-    let updateProgress: (Double, String?) async -> Void
-    let isCancelled: () -> Bool
+    let updateProgress: @Sendable (Double, String?) async -> Void
+    let isCancelled: @MainActor @Sendable () -> Bool
 
     func update(progress: Double, message: String? = nil) async {
         await updateProgress(progress, message)
     }
 
+    @MainActor
     func checkCancellation() throws {
         if isCancelled() {
             throw CancellationError()
